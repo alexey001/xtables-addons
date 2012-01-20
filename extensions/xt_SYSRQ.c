@@ -225,8 +225,10 @@ sysrq_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
 		       ": " NIPQUAD_FMT ":%u -> :%u len=%u\n",
 		       NIPQUAD(iph->saddr), htons(udph->source),
 		       htons(udph->dest), len);
+#ifdef WITH_CRYPTO
 	sprintf(sysrq_digest_password, NIPQUAD_FMT ",%s",
 	        NIPQUAD(iph->daddr), sysrq_password);
+#endif
 	return sysrq_tg((void *)udph + sizeof(struct udphdr), len);
 }
 
@@ -258,8 +260,10 @@ sysrq_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
 		       ": " NIP6_FMT ":%hu -> :%hu len=%u\n",
 		       NIP6(iph->saddr), ntohs(udph->source),
 		       ntohs(udph->dest), len);
+#ifdef WITH_CRYPTO
 	sprintf(sysrq_digest_password, NIP6_FMT ",%s",
 	        NIP6(iph->daddr), sysrq_password);
+#endif
 	return sysrq_tg((void *)udph + sizeof(struct udphdr), len);
 }
 #endif
