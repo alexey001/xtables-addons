@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <xtables.h>
-#include <net/netfilter/nf_nat.h>
+#include <linux/netfilter/nf_nat.h>
 #include "xt_DNETMAP.h"
 
 #define MODULENAME "DNETMAP"
@@ -65,7 +65,7 @@ static int netmask2bits(u_int32_t netmask)
 static void DNETMAP_init(struct xt_entry_target *t)
 {
 	struct xt_DNETMAP_tginfo *tginfo = (void *)&t->data;
-	struct nf_nat_multi_range *mr = &tginfo->prefix;
+	struct nf_nat_ipv4_multi_range_compat *mr = &tginfo->prefix;
 
 	/* Actually, it's 0, but it's ignored at the moment. */
 	mr->rangesize = 1;
@@ -74,14 +74,14 @@ static void DNETMAP_init(struct xt_entry_target *t)
 }
 
 /* Parses network address */
-static void parse_prefix(char *arg, struct nf_nat_range *range)
+static void parse_prefix(char *arg, struct nf_nat_ipv4_range *range)
 {
 	char *slash;
 	const struct in_addr *ip;
 	u_int32_t netmask;
 	unsigned int bits;
 
-	range->flags |= IP_NAT_RANGE_MAP_IPS;
+	range->flags |= NF_NAT_RANGE_MAP_IPS;
 	slash = strchr(arg, '/');
 	if (slash)
 		*slash = '\0';
@@ -129,7 +129,7 @@ static int DNETMAP_parse(int c, char **argv, int invert, unsigned int *flags,
 			 const void *entry, struct xt_entry_target **target)
 {
 	struct xt_DNETMAP_tginfo *tginfo = (void *)(*target)->data;
-	struct nf_nat_multi_range *mr = &tginfo->prefix;
+	struct nf_nat_ipv4_multi_range_compat *mr = &tginfo->prefix;
 	char *end;
 
 	switch (c) {
@@ -171,8 +171,8 @@ static void DNETMAP_print_addr(const void *ip,
 			       int numeric)
 {
 	struct xt_DNETMAP_tginfo *tginfo = (void *)&target->data;
-	const struct nf_nat_multi_range *mr = &tginfo->prefix;
-	const struct nf_nat_range *r = &mr->range[0];
+	const struct nf_nat_ipv4_multi_range_compat *mr = &tginfo->prefix;
+	const struct nf_nat_ipv4_range *r = &mr->range[0];
 	struct in_addr a;
 	int bits;
 
