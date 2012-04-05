@@ -22,12 +22,6 @@ Supported configurations for this release
 	  - CONFIG_CONNECTOR y/m if you wish to receive userspace
 	    notifications from pknock through netlink/connector
 
-Compilation of ipset-genl-6.x is disabled by default. It has
-additional requirements.
-
-	* libmnl
-	* Linux kernel >= 2.6.35
-
 
 Selecting extensions
 ====================

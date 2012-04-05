@@ -5,6 +5,9 @@ Fixes:
 - compat_xtables: fixed mistranslation of checkentry return values
   (affected kernels < 2.6.23)
 - xt_SYSRQ: fix compile error when crypto is turned off
+Changes:
+- ipset6-genl has been dropped from the tree;
+  the libmnl build-time dependency is thus no longer needed
 Enhancements:
 - Support for Linux 3.3, 3.4
 
