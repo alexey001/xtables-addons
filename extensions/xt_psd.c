@@ -227,7 +227,7 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 				goto out_match;
 
 			/* Remember the new port */
-			if (curr->count < SCAN_MAX_COUNT) {
+			if (curr->count < ARRAY_SIZE(curr->ports)) {
 				curr->ports[curr->count].number = dest_port;
 				curr->ports[curr->count].proto = proto;
 				curr->ports[curr->count].and_flags = tcp_flags;
