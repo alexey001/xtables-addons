@@ -11,7 +11,10 @@ obj-${build_CHECKSUM}    += xt_CHECKSUM.o
 obj-${build_DELUDE}      += xt_DELUDE.o
 obj-${build_DHCPMAC}     += xt_DHCPMAC.o
 obj-${build_DNETMAP}     += xt_DNETMAP.o
+$(warning $(LINUX_KERNEL_VERSION))
+ifeq (${VERSION},3)
 obj-${build_ECHO}        += xt_ECHO.o
+endif
 obj-${build_IPMARK}      += xt_IPMARK.o
 obj-${build_LOGMARK}     += xt_LOGMARK.o
 obj-${build_RAWNAT}      += xt_RAWNAT.o iptable_rawpost.o
