@@ -106,6 +106,19 @@ static inline int hashfunc(struct in_addr addr)
 	return hash & (HASH_SIZE - 1);
 }
 
+static bool port_in_list(struct host *host, uint8_t proto, uint16_t port)
+{
+	unsigned int i;
+
+	for (i = 0; i < host->count; ++i) {
+		if (host->ports[i].proto != proto)
+			continue;
+		if (host->ports[i].number == port)
+			return true;
+	}
+	return false;
+}
+
 static bool
 xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 {
@@ -121,7 +134,7 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	u_int8_t proto;
 	unsigned long now;
 	struct host *curr, *last, **head;
-	int hash, index, count;
+	int hash, count;
 	/* Parameters from userspace */
 	const struct xt_psd_info *psdinfo = match->matchinfo;
 
@@ -182,14 +195,8 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 		if (now - curr->timestamp <= (psdinfo->delay_threshold*HZ)/100 &&
 		    time_after_eq(now, curr->timestamp)) {
 
-			/* Just update the appropriate list entry if we've seen this port already */
-			for (index = 0; index < curr->count; index++) {
-				if (curr->ports[index].number == dest_port) {
-					curr->ports[index].proto = proto;
-					goto out_no_match;
-				}
-			}
-
+			if (port_in_list(curr, proto, dest_port))
+				goto out_no_match;
 			/* TCP/ACK and/or TCP/RST to a new port? This could be an outgoing connection. */
 			if (proto == IPPROTO_TCP && (tcph->ack || tcph->rst))
 				goto out_no_match;
