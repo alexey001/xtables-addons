@@ -278,13 +278,35 @@ out_match:
 	return true;
 }
 
+static int psd_mt_check(const struct xt_mtchk_param *par)
+{
+	const struct xt_psd_info *info = par->matchinfo;
+
+	if (info->weight_threshold == 0)
+		/* 0 would match on every 1st packet */
+		return -EINVAL;
+
+	if ((info->lo_ports_weight | info->hi_ports_weight) == 0)
+		/* would never match */
+		return -EINVAL;
+
+	if (info->delay_threshold > PSD_MAX_RATE ||
+	    info->weight_threshold > PSD_MAX_RATE ||
+	    info->lo_ports_weight > PSD_MAX_RATE ||
+	    info->hi_ports_weight > PSD_MAX_RATE)
+		return -EINVAL;
+
+	return 0;
+}
+
 static struct xt_match xt_psd_reg __read_mostly = {
-	.name		= "psd",
-	.family    = NFPROTO_IPV4,
-	.revision  = 1,
-	.match		= xt_psd_match,
-	.matchsize	= sizeof(struct xt_psd_info),
-	.me			= THIS_MODULE,
+	.name       = "psd",
+	.family     = NFPROTO_IPV4,
+	.revision   = 1,
+	.checkentry = psd_mt_check,
+	.match      = xt_psd_match,
+	.matchsize  = sizeof(struct xt_psd_info),
+	.me         = THIS_MODULE,
 };
 
 static int __init xt_psd_init(void)
