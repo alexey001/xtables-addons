@@ -36,7 +36,7 @@ Matches some WinMX packets. Considered as beta, use careful!
 Matches Ares and AresLite packets. Use together with \-j DROP only.
 .TP
 \fB\-\-debug\fP
-Prints some information about each hit into kernel logfile. May 
+Prints some information about each hit into kernel logfile. May
 produce huge logfiles so beware!
 .PP
 Note that ipp2p may not (and often, does not) identify all packets that are

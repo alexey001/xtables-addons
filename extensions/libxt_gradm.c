@@ -78,7 +78,7 @@ static void gradm_mt_save(const void *ip, const struct xt_entry_match *match)
 		printf(" --enabled ");
 }
 
-static struct xtables_match gradm_mt_reg = { 
+static struct xtables_match gradm_mt_reg = {
 	.family        = NFPROTO_UNSPEC,
 	.name          = "gradm",
 	.version       = XTABLES_VERSION,

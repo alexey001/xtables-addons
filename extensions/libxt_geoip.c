@@ -100,7 +100,7 @@ geoip_get_subnets(const char *code, uint32_t *count, uint8_t nfproto)
 	close(fd);
 	return subnets;
 }
- 
+
 static struct geoip_country_user *geoip_load_cc(const char *code,
     unsigned short cc, uint8_t nfproto)
 {

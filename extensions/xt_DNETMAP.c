@@ -633,7 +633,7 @@ dnetmap_tg_proc_write(struct file *file, const char __user *input,size_t size, l
 	__be32 addr1,addr2;
 	bool add;
 	char str[25];
-	
+
 	if (size == 0)
 		return 0;
 	if (size > sizeof(buf))
@@ -642,7 +642,7 @@ dnetmap_tg_proc_write(struct file *file, const char __user *input,size_t size, l
 		return -EFAULT;
 	if(strcspn(c,"\n") < size)
 		buf[strcspn(c,"\n")]='\0';
-	
+
 	/* Strict protocol! */
 	if (*loff != 0)
 		return -ESPIPE;
@@ -696,10 +696,10 @@ dnetmap_tg_proc_write(struct file *file, const char __user *input,size_t size, l
 		c2 = strchr(c,':');
 		if(c2 == NULL)
 			goto invalid_arg_unlock;
-		
+
 		c++;
 		c2++;
-		
+
 		if( ! (in4_pton(c2,strlen(c2),(void *)&addr2, '\0', NULL) &&
 			  in4_pton(c,strlen(c),(void *)&addr1, ':', NULL)))
 			goto invalid_arg_unlock;
@@ -731,7 +731,7 @@ dnetmap_tg_proc_write(struct file *file, const char __user *input,size_t size, l
 					break;
 				}
 		}
-		
+
 		e->prenat_addr=addr1;
 		e->flags |= XT_DNETMAP_STATIC;
 		list_add_tail(&e->glist,
@@ -742,7 +742,7 @@ dnetmap_tg_proc_write(struct file *file, const char __user *input,size_t size, l
 							   dnetmap_entry_hash
 							   (e->postnat_addr)]);
 		list_del(&e->lru_list);
-		
+
 		sprintf(str, NIPQUAD_FMT ":" NIPQUAD_FMT, NIPQUAD(addr1),NIPQUAD(addr2));
 		printk(KERN_INFO KBUILD_MODNAME ": adding static binding %s\n", str);
 
@@ -755,7 +755,7 @@ dnetmap_tg_proc_write(struct file *file, const char __user *input,size_t size, l
 
 		e = dnetmap_entry_rlookup(p->dnetmap,addr1);
 		if(e == NULL) e = dnetmap_entry_lookup(p->dnetmap,addr1);
-		
+
 		if(e != NULL){
 			if (!disable_log)
 				printk(KERN_INFO KBUILD_MODNAME
@@ -773,7 +773,7 @@ dnetmap_tg_proc_write(struct file *file, const char __user *input,size_t size, l
 			goto invalid_arg_unlock;
 		}
 	}
- 
+
 	spin_unlock_bh(&dnetmap_lock);
 
 	/* Note we removed one above */
@@ -782,7 +782,7 @@ dnetmap_tg_proc_write(struct file *file, const char __user *input,size_t size, l
 
 	invalid_arg_unlock:
 		spin_unlock_bh(&dnetmap_lock);
-	
+
 	invalid_arg:
 		//printk(KERN_INFO KBUILD_MODNAME ": Need \"+prenat_ip:postnat_ip\", \"-ip\" or \"/\"\n");
 		printk(KERN_INFO KBUILD_MODNAME ": Error! Invalid option passed via procfs.\n");
@@ -809,7 +809,7 @@ static int dnetmap_stat_proc_read(char __user *buffer, char **start,
 	long int ttl, sum_ttl;
 
 	used=used_static=all=sum_ttl=0;
-	
+
 	spin_lock_bh(&dnetmap_lock);
 
 	list_for_each_entry(e, &p->elist, list) {

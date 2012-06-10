@@ -47,8 +47,8 @@ and \fBlasthit\fR entries contain \fBS\fR in case of static binding.
 \fB/proc/net/xt_DNETMAP/\fR\fIsubnet\fR\fB_\fR\fImask\fR\fB_stat\fR
 Contains statistics for given subnet/mask. Line contains contains four
 numerical values separated by spaces. First one is number of currently used
-dynamic addresses (bindings with negative ttl excluded), second one is number 
-static assignments, third one is number of all usable addresses in subnet and 
+dynamic addresses (bindings with negative ttl excluded), second one is number
+static assignments, third one is number of all usable addresses in subnet and
 the fourth one is mean \fBttl\fR value for all active entries. If prefix has
 persistent flag set it'll be noted as fifth entry.
 .PP
@@ -77,7 +77,7 @@ echo "flush" > \fB/proc/net/xt_DNETMAP/subnet_mask\fR
 Flushes all bindings for specific prefix. All static entries are also flushed
 and are available for dynamic bindings.
 .PP
-Note! Entries are removed if the last iptables rule for a specific prefix is 
+Note! Entries are removed if the last iptables rule for a specific prefix is
 deleted unless there's persistent flag set.
 .PP
 
@@ -147,7 +147,7 @@ using non-static entries.
 
 iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix 20.0.0.0/26
 --persistent
-.br 
+.br
 \fBor\fR
 .br
 iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix 20.0.0.0/26

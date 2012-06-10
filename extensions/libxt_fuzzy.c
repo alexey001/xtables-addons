@@ -100,7 +100,7 @@ static void fuzzy_mt_save(const void *ip, const struct xt_entry_match *match)
 	printf(" --upper-limit %u ", info->maximum_rate);
 }
 
-static struct xtables_match fuzzy_mt_reg = { 
+static struct xtables_match fuzzy_mt_reg = {
 	.name          = "fuzzy",
 	.revision      = 1,
 	.version       = XTABLES_VERSION,
