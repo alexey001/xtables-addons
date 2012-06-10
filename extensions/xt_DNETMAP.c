@@ -3,7 +3,7 @@
  * or destination (PREROUTING),
  */
 
-/* (C) 2011 Marek Kierdelewicz <marek@koba.pl>
+/* (C) 2012 Marek Kierdelewicz <marek@koba.pl>
  *
  * module is dedicated to my wife Eliza and my daughters Jula and Ola :* :* :*
  *
@@ -40,7 +40,7 @@
 #include "xt_DNETMAP.h"
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Marek Kierdelewicz <marek@koba.pl>");
+MODULE_AUTHOR("Marek Kierdelewicz <marek@piasta.pl>");
 MODULE_DESCRIPTION(
 	"Xtables: dynamic two-way 1:1 NAT mapping of IPv4 addresses");
 MODULE_ALIAS("ipt_DNETMAP");
@@ -77,6 +77,7 @@ struct dnetmap_entry {
 	struct list_head lru_list;
 	__be32 prenat_addr;
 	__be32 postnat_addr;
+	__u8 flags;
 	unsigned long stamp;
 	struct dnetmap_prefix *prefix;
 };
@@ -84,12 +85,18 @@ struct dnetmap_entry {
 struct dnetmap_prefix {
 	struct nf_nat_ipv4_multi_range_compat prefix;
 	char prefix_str[16];
-	struct list_head list;
+#ifdef CONFIG_PROC_FS
+	char proc_str_data[20];
+	char proc_str_stat[25];
+#endif
+	struct list_head elist; // element list head
+	struct list_head list;	// prefix list
+	__u8 flags;
 	unsigned int refcnt;
 	/* lru entry list */
 	struct list_head lru_list;
-	/* hash based on prenat-ips */
-	struct list_head iphash[0];
+	/* pointer do dnetmap_net */
+	struct dnetmap_net *dnetmap;
 };
 
 struct dnetmap_net {
@@ -157,6 +164,18 @@ dnetmap_entry_rlookup(struct dnetmap_net *dnetmap_net, const __be32 addr)
 	return NULL;
 }
 
+static int
+dnetmap_addr_in_prefix(struct dnetmap_net *dnetmap_net, const __be32 addr,
+	struct dnetmap_prefix *p)
+{
+	struct dnetmap_entry *e;
+
+	list_for_each_entry(e, &p->elist, list)
+		if (memcmp(&e->postnat_addr, &addr, sizeof(addr)) == 0)
+			return 1;
+	return 0;
+}
+
 static struct dnetmap_prefix *
 dnetmap_prefix_lookup(struct dnetmap_net *dnetmap_net,
 		      const struct nf_nat_ipv4_multi_range_compat *mr)
@@ -169,9 +188,44 @@ dnetmap_prefix_lookup(struct dnetmap_net *dnetmap_net,
 	return NULL;
 }
 
-static void dnetmap_prefix_flush(struct dnetmap_net *dnetmap_net,
+static void dnetmap_prefix_destroy(struct dnetmap_net *dnetmap_net,
 				 struct dnetmap_prefix *p)
 {
+	struct dnetmap_entry *e, *next;
+	unsigned int i;
+
+#ifdef CONFIG_PROC_FS
+	remove_proc_entry(p->proc_str_data, dnetmap_net->xt_dnetmap);
+	remove_proc_entry(p->proc_str_stat, dnetmap_net->xt_dnetmap);
+#endif
+
+	for (i = 0; i < hash_size; i++) {
+		list_for_each_entry_safe(e, next,
+					 &dnetmap_net->dnetmap_iphash[i], glist)
+			if (e->prefix == p)
+				list_del(&e->glist);
+
+		list_for_each_entry_safe(e, next,
+					 &dnetmap_net->
+					 dnetmap_iphash[hash_size + i], grlist)
+			if (e->prefix == p)
+				list_del(&e->grlist);
+	}
+
+	list_for_each_entry_safe(e, next, &p->elist, list) {
+		list_del(&e->list);
+		if(! (e->flags & XT_DNETMAP_STATIC)) list_del(&e->lru_list);
+		kfree(e);
+	}
+
+	list_del(&p->list);
+	kfree(p);
+}
+
+/* function clears bindings without destroying prefix */
+static void dnetmap_prefix_softflush(struct dnetmap_prefix *p)
+{
+	struct dnetmap_net *dnetmap_net = p->dnetmap;
 	struct dnetmap_entry *e, *next;
 	unsigned int i;
 
@@ -186,12 +240,16 @@ static void dnetmap_prefix_flush(struct dnetmap_net *dnetmap_net,
 					 dnetmap_iphash[hash_size + i], grlist)
 			if (e->prefix == p)
 				list_del(&e->grlist);
+	}
+	list_for_each_entry_safe(e, next, &p->elist, list) {
 
-		list_for_each_entry_safe(e, next, &p->iphash[i], list) {
-			list_del(&e->list);
-			list_del(&e->lru_list);
-			kfree(e);
+		/* make dynamic entry of any static entry */
+		if(e->flags & XT_DNETMAP_STATIC){
+			list_add_tail(&e->lru_list, &p->lru_list);
+			e->flags&=~XT_DNETMAP_STATIC;
 		}
+		e->stamp=jiffies-1;
+		e->prenat_addr=0;
 	}
 }
 
@@ -204,11 +262,8 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 	struct dnetmap_entry *e;
 #ifdef CONFIG_PROC_FS
 	struct proc_dir_entry *pde_data, *pde_stat;
-	char proc_str_data[20];
-	char proc_str_stat[25];
 #endif
 	int ret = -EINVAL;
-	int i;
 	__be32 a;
 	__u32 ip_min, ip_max, ip;
 
@@ -243,11 +298,13 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 		goto out;
 	}
 	p->refcnt = 1;
+	p->flags = 0;
+	p->flags |= (tginfo->flags & XT_DNETMAP_PERSISTENT);
+	p->dnetmap = dnetmap_net;
 	memcpy(&p->prefix, mr, sizeof(*mr));
 
 	INIT_LIST_HEAD(&p->lru_list);
-	for (i = 0; i < hash_size * 2; i++)
-		INIT_LIST_HEAD(&p->iphash[i]);
+	INIT_LIST_HEAD(&p->elist);
 
 	ip_min = ntohl(mr->range[0].min_ip) + (whole_prefix == 0);
 	ip_max = ntohl(mr->range[0].max_ip) - (whole_prefix == 0);
@@ -255,9 +312,9 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 	sprintf(p->prefix_str, NIPQUAD_FMT "/%u", NIPQUAD(mr->range[0].min_ip),
 		33 - ffs(~(ip_min ^ ip_max)));
 #ifdef CONFIG_PROC_FS
-	sprintf(proc_str_data, NIPQUAD_FMT "_%u", NIPQUAD(mr->range[0].min_ip),
+	sprintf(p->proc_str_data, NIPQUAD_FMT "_%u", NIPQUAD(mr->range[0].min_ip),
 		33 - ffs(~(ip_min ^ ip_max)));
-	sprintf(proc_str_stat, NIPQUAD_FMT "_%u_stat", NIPQUAD(mr->range[0].min_ip),
+	sprintf(p->proc_str_stat, NIPQUAD_FMT "_%u_stat", NIPQUAD(mr->range[0].min_ip),
 		33 - ffs(~(ip_min ^ ip_max)));
 #endif
 	printk(KERN_INFO KBUILD_MODNAME ": new prefix %s\n", p->prefix_str);
@@ -271,12 +328,14 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 		e->prenat_addr = 0;
 		e->stamp = jiffies;
 		e->prefix = p;
+		e->flags = 0;
 		list_add_tail(&e->lru_list, &p->lru_list);
+		list_add_tail(&e->list, &p->elist);
 	}
 
 #ifdef CONFIG_PROC_FS
 	/* data */
-	pde_data = proc_create_data(proc_str_data, proc_perms,
+	pde_data = proc_create_data(p->proc_str_data, proc_perms,
 				    dnetmap_net->xt_dnetmap,
 				    &dnetmap_tg_fops, p);
 	if (pde_data == NULL) {
@@ -288,7 +347,7 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 	pde_data->gid = proc_gid;
 
 	/* statistics */
-	pde_stat = create_proc_entry(proc_str_stat, proc_perms,
+	pde_stat = create_proc_entry(p->proc_str_stat, proc_perms,
 				     dnetmap_net->xt_dnetmap);
 	if (pde_stat == NULL) {
 		kfree(p);
@@ -351,7 +410,7 @@ dnetmap_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 			if (memcmp(mr, &e->prefix, sizeof(*mr)))
 				goto no_rev_map;
 		/* don't reset ttl if flag is set */
-		if (jttl >= 0) {
+		if (jttl >= 0 && (! (e->flags & XT_DNETMAP_STATIC) ) ) {
 			p = e->prefix;
 			e->stamp = jiffies + jttl;
 			list_move_tail(&e->lru_list, &p->lru_list);
@@ -378,17 +437,24 @@ dnetmap_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 
 	if (e == NULL) {	/* need for new binding */
 
+		// finish if it's static only rule
+		if(tginfo->flags & XT_DNETMAP_STATIC)
+			goto no_free_ip;
+
 bind_new_prefix:
 		e = list_entry(p->lru_list.next, struct dnetmap_entry,
 			       lru_list);
 		if (e->prenat_addr != 0 && time_before(jiffies, e->stamp)) {
-			if (!disable_log)
+			if (!disable_log && ! (p->flags & XT_DNETMAP_FULL) ){
 				printk(KERN_INFO KBUILD_MODNAME
 				       ": ip " NIPQUAD_FMT " - no free adresses in prefix %s\n",
 				       NIPQUAD(prenat_ip), p->prefix_str);
+				p->flags |= XT_DNETMAP_FULL;
+			}
 			goto no_free_ip;
 		}
 
+		p->flags &= ~XT_DNETMAP_FULL;
 		postnat_ip = e->postnat_addr;
 
 		if (e->prenat_addr != 0) {
@@ -397,7 +463,6 @@ bind_new_prefix:
 				printk(KERN_INFO KBUILD_MODNAME
 				       ": timeout binding " NIPQUAD_FMT " -> " NIPQUAD_FMT "\n",
 				       NIPQUAD(prenat_ip_prev), NIPQUAD(postnat_ip) );
-			list_del(&e->list);
 			list_del(&e->glist);
 			list_del(&e->grlist);
 		}
@@ -405,8 +470,6 @@ bind_new_prefix:
 		e->prenat_addr = prenat_ip;
 		e->stamp = jiffies + jttl;
 		list_move_tail(&e->lru_list, &p->lru_list);
-		list_add_tail(&e->list,
-			      &p->iphash[dnetmap_entry_hash(prenat_ip)]);
 		list_add_tail(&e->glist,
 			      &dnetmap_net->
 			      dnetmap_iphash[dnetmap_entry_hash(prenat_ip)]);
@@ -421,21 +484,21 @@ bind_new_prefix:
 
 	} else {
 
-		if (!(tginfo->flags & XT_DNETMAP_REUSE))
+		if (!(tginfo->flags & XT_DNETMAP_REUSE) && !(e->flags & XT_DNETMAP_STATIC))
 			if (time_before(e->stamp, jiffies) && p != e->prefix) {
 				if (!disable_log)
 					printk(KERN_INFO KBUILD_MODNAME
 					       ": timeout binding " NIPQUAD_FMT " -> " NIPQUAD_FMT "\n",
 					       NIPQUAD(e->prenat_addr),
 					       NIPQUAD(e->postnat_addr));
-				list_del(&e->list);
 				list_del(&e->glist);
 				list_del(&e->grlist);
 				e->prenat_addr = 0;
 				goto bind_new_prefix;
 			}
-		/* don't reset ttl if flag is set */
-		if (jttl >= 0) {
+		/* don't reset ttl if flag is set
+		or it is static entry*/
+		if (jttl >= 0 && ! (e->flags & XT_DNETMAP_STATIC) ) {
 			e->stamp = jiffies + jttl;
 			p = e->prefix;
 			list_move_tail(&e->lru_list, &p->lru_list);
@@ -466,32 +529,17 @@ static void dnetmap_tg_destroy(const struct xt_tgdtor_param *par)
 	const struct xt_DNETMAP_tginfo *tginfo = par->targinfo;
 	const struct nf_nat_ipv4_multi_range_compat *mr = &tginfo->prefix;
 	struct dnetmap_prefix *p;
-#ifdef CONFIG_PROC_FS
-	char str[25];
-#endif
 
 	if (!(tginfo->flags & XT_DNETMAP_PREFIX))
 		return;
 
 	mutex_lock(&dnetmap_mutex);
+	spin_lock_bh(&dnetmap_lock);
 	p = dnetmap_prefix_lookup(dnetmap_net, mr);
-	if (--p->refcnt == 0) {
-		spin_lock_bh(&dnetmap_lock);
-		list_del(&p->list);
-		spin_unlock_bh(&dnetmap_lock);
-#ifdef CONFIG_PROC_FS
-		sprintf(str, NIPQUAD_FMT "_%u", NIPQUAD(mr->range[0].min_ip),
-			33 - ffs(~(ntohl(mr->range[0].min_ip ^
-			mr->range[0].max_ip))));
-		remove_proc_entry(str, dnetmap_net->xt_dnetmap);
-		sprintf(str, NIPQUAD_FMT "_%u_stat", NIPQUAD(mr->range[0].min_ip),
-			33 - ffs(~(ntohl(mr->range[0].min_ip ^
-			mr->range[0].max_ip))));
-		remove_proc_entry(str, dnetmap_net->xt_dnetmap);
-#endif
-		dnetmap_prefix_flush(dnetmap_net, p);
-		kfree(p);
+	if (--p->refcnt == 0 && (! (p->flags & XT_DNETMAP_PERSISTENT) ) ) {
+		dnetmap_prefix_destroy(dnetmap_net, p);
 	}
+	spin_unlock_bh(&dnetmap_lock);
 	mutex_unlock(&dnetmap_mutex);
 }
 
@@ -511,7 +559,7 @@ __acquires(dnetmap_lock)
 
 	spin_lock_bh(&dnetmap_lock);
 
-	list_for_each_entry(e, &prefix->lru_list, lru_list)
+	list_for_each_entry(e, &prefix->elist, list)
 		if (p-- == 0)
 			return e;
 	return NULL;
@@ -522,13 +570,13 @@ static void *dnetmap_seq_next(struct seq_file *seq, void *v, loff_t * pos)
 	struct dnetmap_iter_state *st = seq->private;
 	const struct dnetmap_prefix *prefix = st->p;
 	const struct dnetmap_entry *e = v;
-	const struct list_head *head = e->lru_list.next;
+	const struct list_head *head = e->list.next;
 
-	if (head == &prefix->lru_list)
+	if (head == &prefix->elist)
 		return NULL;
 
 	++*pos;
-	return list_entry(head, struct dnetmap_entry, lru_list);
+	return list_entry(head, struct dnetmap_entry, list);
 }
 
 static void dnetmap_seq_stop(struct seq_file *s, void *v)
@@ -541,9 +589,14 @@ static int dnetmap_seq_show(struct seq_file *seq, void *v)
 {
 	const struct dnetmap_entry *e = v;
 
-	seq_printf(seq, NIPQUAD_FMT " -> " NIPQUAD_FMT " --- ttl: %d lasthit: %lu\n",
-		   NIPQUAD(e->prenat_addr), NIPQUAD(e->postnat_addr),
-		   (int)(e->stamp - jiffies) / HZ, (e->stamp - jtimeout) / HZ);
+	if((e->flags & XT_DNETMAP_STATIC) == 0){
+		seq_printf(seq, NIPQUAD_FMT " -> " NIPQUAD_FMT " --- ttl: %d lasthit: %lu\n",
+				NIPQUAD(e->prenat_addr), NIPQUAD(e->postnat_addr),
+				(int)(e->stamp - jiffies) / HZ, (e->stamp - jtimeout) / HZ);
+	}else{
+		seq_printf(seq, NIPQUAD_FMT " -> " NIPQUAD_FMT " --- ttl: S lasthit: S\n",
+				NIPQUAD(e->prenat_addr), NIPQUAD(e->postnat_addr));
+	}
 	return 0;
 }
 
@@ -567,9 +620,180 @@ static int dnetmap_seq_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
+static ssize_t
+dnetmap_tg_proc_write(struct file *file, const char __user *input,size_t size, loff_t *loff)
+{
+	const struct proc_dir_entry *pde = PDE(file->f_path.dentry->d_inode);
+	struct dnetmap_prefix *p = pde->data;
+	struct dnetmap_entry *e;
+	char buf[sizeof("+192.168.100.100:200.200.200.200")];
+	const char *c = buf;
+	const char *c2;
+	//union nf_inet_addr addr = {};
+	__be32 addr1,addr2;
+	bool add;
+	char str[25];
+	
+	if (size == 0)
+		return 0;
+	if (size > sizeof(buf))
+		size = sizeof(buf);
+	if (copy_from_user(buf, input, size) != 0)
+		return -EFAULT;
+	if(strcspn(c,"\n") < size)
+		buf[strcspn(c,"\n")]='\0';
+	
+	/* Strict protocol! */
+	if (*loff != 0)
+		return -ESPIPE;
+	switch (*c) {
+		case 'f': /* flush table */
+			if( strcmp(c,"flush") != 0 )
+				goto invalid_arg;
+			printk(KERN_INFO KBUILD_MODNAME ": flushing prefix %s\n", p->prefix_str);
+			spin_lock_bh(&dnetmap_lock);
+			dnetmap_prefix_softflush(p);
+			spin_unlock_bh(&dnetmap_lock);
+			return size;
+		case '-': /* remove address or attribute */
+			if( strcmp(c,"-persistent") == 0){
+				/* case if persistent flag is already unset */
+				if( ! (p->flags & XT_DNETMAP_PERSISTENT) ){
+					printk(KERN_INFO KBUILD_MODNAME ": prefix %s is not persistent already - doing nothing\n", p->prefix_str);
+					return size;
+				}
+				printk(KERN_INFO KBUILD_MODNAME ": prefix %s is now non-persistent\n", p->prefix_str);
+				spin_lock_bh(&dnetmap_lock);
+				p->flags &= ~XT_DNETMAP_PERSISTENT;
+				spin_unlock_bh(&dnetmap_lock);
+				return size;
+			}
+			add = false;
+			break;
+		case '+': /* add address or attribute */
+			if( strcmp(c,"+persistent") == 0){
+				/* case if persistent flag is already unset */
+				if( p->flags & XT_DNETMAP_PERSISTENT ){
+					printk(KERN_INFO KBUILD_MODNAME ": prefix %s is persistent already - doing nothing\n", p->prefix_str);
+					return size;
+				}
+				printk(KERN_INFO KBUILD_MODNAME ": prefix %s is now persistent\n", p->prefix_str);
+				spin_lock_bh(&dnetmap_lock);
+				p->flags |= XT_DNETMAP_PERSISTENT;
+				spin_unlock_bh(&dnetmap_lock);
+				return size;
+			}
+			add = true;
+			break;
+		default:
+			goto invalid_arg;
+	}
+
+	spin_lock_bh(&dnetmap_lock);
+
+	// in case static entry is added we need to parse second ip addresses
+	if (add){
+		c2 = strchr(c,':');
+		if(c2 == NULL)
+			goto invalid_arg_unlock;
+		
+		c++;
+		c2++;
+		
+		if( ! (in4_pton(c2,strlen(c2),(void *)&addr2, '\0', NULL) &&
+			  in4_pton(c,strlen(c),(void *)&addr1, ':', NULL)))
+			goto invalid_arg_unlock;
+
+		// sanity check - prenat ip can't belong to postnat prefix
+		if ( dnetmap_addr_in_prefix(p->dnetmap, addr1, p)){
+			printk(KERN_INFO KBUILD_MODNAME ": add static binding operation failed - prenat ip can't belong to postnat prefix\n");
+			goto invalid_arg_unlock;
+		}
+
+		// make sure postnat ip belongs to postnat prefix
+		if ( ! dnetmap_addr_in_prefix(p->dnetmap, addr2, p)){
+			printk(KERN_INFO KBUILD_MODNAME ": add static binding operation failed - postnat ip must belong to postnat prefix\n");
+			goto invalid_arg_unlock;
+		}
+
+		e = dnetmap_entry_rlookup(p->dnetmap,addr2);
+		if(e != NULL){
+			if (!disable_log)
+				printk(KERN_INFO KBUILD_MODNAME
+				       ": timeout binding " NIPQUAD_FMT " -> " NIPQUAD_FMT "\n",
+				       NIPQUAD(e->prenat_addr), NIPQUAD(e->postnat_addr) );
+			list_del(&e->glist);
+			list_del(&e->grlist);
+		}else{
+			// find existing entry in prefix elist
+			list_for_each_entry(e, &p->elist, list)
+				if (memcmp(&e->postnat_addr, &addr2, sizeof(addr2)) == 0){
+					break;
+				}
+		}
+		
+		e->prenat_addr=addr1;
+		e->flags |= XT_DNETMAP_STATIC;
+		list_add_tail(&e->glist,
+			      &p->dnetmap->
+			      dnetmap_iphash[dnetmap_entry_hash(e->prenat_addr)]);
+		list_add_tail(&e->grlist,
+			      &p->dnetmap->dnetmap_iphash[hash_size +
+							   dnetmap_entry_hash
+							   (e->postnat_addr)]);
+		list_del(&e->lru_list);
+		
+		sprintf(str, NIPQUAD_FMT ":" NIPQUAD_FMT, NIPQUAD(addr1),NIPQUAD(addr2));
+		printk(KERN_INFO KBUILD_MODNAME ": adding static binding %s\n", str);
+
+	// case of removing binding
+	}else{
+
+		c++;
+		if( ! in4_pton(c,strlen(c),(void *)&addr1, '\0', NULL))
+			goto invalid_arg_unlock;
+
+		e = dnetmap_entry_rlookup(p->dnetmap,addr1);
+		if(e == NULL) e = dnetmap_entry_lookup(p->dnetmap,addr1);
+		
+		if(e != NULL){
+			if (!disable_log)
+				printk(KERN_INFO KBUILD_MODNAME
+				       ": remove binding " NIPQUAD_FMT " -> " NIPQUAD_FMT "\n",
+				       NIPQUAD(e->prenat_addr), NIPQUAD(e->postnat_addr) );
+			list_del(&e->glist);
+			list_del(&e->grlist);
+			if(e->flags & XT_DNETMAP_STATIC){
+				list_add_tail(&e->lru_list,&p->lru_list);
+				e->flags &= ~XT_DNETMAP_STATIC;
+			}
+			e->prenat_addr=0;
+			e->stamp=jiffies-1;
+		}else{
+			goto invalid_arg_unlock;
+		}
+	}
+ 
+	spin_unlock_bh(&dnetmap_lock);
+
+	/* Note we removed one above */
+	*loff += size + 1;
+	return size + 1;
+
+	invalid_arg_unlock:
+		spin_unlock_bh(&dnetmap_lock);
+	
+	invalid_arg:
+		//printk(KERN_INFO KBUILD_MODNAME ": Need \"+prenat_ip:postnat_ip\", \"-ip\" or \"/\"\n");
+		printk(KERN_INFO KBUILD_MODNAME ": Error! Invalid option passed via procfs.\n");
+		return -EINVAL;
+}
+
+
 static const struct file_operations dnetmap_tg_fops = {
 	.open = dnetmap_seq_open,
 	.read = seq_read,
+	.write   = dnetmap_tg_proc_write,
 	.release = seq_release_private,
 	.owner = THIS_MODULE,
 };
@@ -581,27 +805,31 @@ static int dnetmap_stat_proc_read(char __user *buffer, char **start,
 {
 	const struct dnetmap_prefix *p = data;
 	struct dnetmap_entry *e;
-	unsigned int used, all;
+	unsigned int used, used_static, all;
 	long int ttl, sum_ttl;
 
-	used = 0;
-	all = 0;
-	sum_ttl = 0;
-
+	used=used_static=all=sum_ttl=0;
+	
 	spin_lock_bh(&dnetmap_lock);
 
-	list_for_each_entry(e, &p->lru_list, lru_list) {
+	list_for_each_entry(e, &p->elist, list) {
 
-		ttl = e->stamp - jiffies;
-		if (e->prenat_addr != 0 && ttl >= 0) {
-			used++;
-			sum_ttl += ttl;
+		if (e->prenat_addr != 0){
+			if (e->flags & XT_DNETMAP_STATIC){
+				used_static++;
+			}else{
+				ttl = e->stamp - jiffies;
+				if (e->prenat_addr != 0 && ttl >= 0) {
+					used++;
+					sum_ttl += ttl;
+				}
+			}
 		}
 		all++;
 	}
 
 	sum_ttl = used > 0 ? sum_ttl / (used * HZ) : 0;
-	sprintf(buffer, "%u %u %ld\n", used, all, sum_ttl);
+	sprintf(buffer, "%u %u %u %ld %s\n", used, used_static, all, sum_ttl,(p->flags & XT_DNETMAP_PERSISTENT ? "persistent" : ""));
 
 	if (length >= strlen(buffer))
 		*eof = true;
@@ -663,12 +891,24 @@ static int __net_init dnetmap_net_init(struct net *net)
 static void __net_exit dnetmap_net_exit(struct net *net)
 {
 	struct dnetmap_net *dnetmap_net = dnetmap_pernet(net);
+	struct dnetmap_prefix *p,*next;
 
-	BUG_ON(!list_empty(&dnetmap_net->prefixes));
+	mutex_lock(&dnetmap_mutex);
+	spin_lock_bh(&dnetmap_lock);
+
+	list_for_each_entry_safe(p, next, &dnetmap_net->prefixes, list){
+		BUG_ON(p->refcnt != 0);
+		dnetmap_prefix_destroy(dnetmap_net, p);
+	}
+
+	spin_unlock_bh(&dnetmap_lock);
+	mutex_unlock(&dnetmap_mutex);
+
 	kfree(dnetmap_net->dnetmap_iphash);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
 	kfree(dnetmap_net);
 #endif
+
 	dnetmap_proc_net_exit(net);
 }
 
@@ -713,6 +953,8 @@ static int __init dnetmap_tg_init(void)
 	err = xt_register_target(&dnetmap_tg_reg);
 	if (err)
 		unregister_pernet_subsys(&dnetmap_net_ops);
+
+	printk( KERN_INFO KBUILD_MODNAME " INIT successfull (version %d)\n", DNETMAP_VERSION );
 
 	return err;
 }
