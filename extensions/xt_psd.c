@@ -119,6 +119,36 @@ static bool port_in_list(struct host *host, uint8_t proto, uint16_t port)
 	return false;
 }
 
+static uint16_t get_port_weight(const struct xt_psd_info *psd, __be16 port)
+{
+	return ntohs(port) < 1024 ? psd->lo_ports_weight : psd->hi_ports_weight;
+}
+
+static bool
+is_portscan(struct host *host, const struct xt_psd_info *psdinfo,
+            uint8_t proto, __be16 dest_port)
+{
+	host->timestamp = jiffies;
+
+	if (host->weight >= psdinfo->weight_threshold) /* already matched */
+		return true;
+
+	/* Update the total weight */
+	host->weight += get_port_weight(psdinfo, dest_port);
+
+	/* Got enough destination ports to decide that this is a scan? */
+	if (host->weight >= psdinfo->weight_threshold)
+		return true;
+
+	/* Remember the new port */
+	if (host->count < ARRAY_SIZE(host->ports)) {
+		host->ports[host->count].number = dest_port;
+		host->ports[host->count].proto = proto;
+		host->count++;
+	}
+	return false;
+}
+
 static bool
 xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 {
@@ -201,31 +231,10 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 			if (proto == IPPROTO_TCP && (tcph->ack || tcph->rst))
 				goto out_no_match;
 
-			/* Packet to a new port, and not TCP/ACK: update the timestamp */
-			curr->timestamp = now;
-
-			/* Matched this scan already? Then Leave. */
-			if (curr->weight >= psdinfo->weight_threshold)
+			if (is_portscan(curr, psdinfo, proto, dest_port))
 				goto out_match;
-
-			/* Update the total weight */
-			curr->weight += (ntohs(dest_port) < 1024) ?
-				psdinfo->lo_ports_weight : psdinfo->hi_ports_weight;
-
-			/* Got enough destination ports to decide that this is a scan? */
-			if (curr->weight >= psdinfo->weight_threshold)
-				goto out_match;
-
-			/* Remember the new port */
-			if (curr->count < ARRAY_SIZE(curr->ports)) {
-				curr->ports[curr->count].number = dest_port;
-				curr->ports[curr->count].proto = proto;
-				curr->count++;
-			}
-
 			goto out_no_match;
 		}
-
 		/* We know this address, but the entry is outdated. Mark it unused, and
 		 * remove from the hash table. We'll allocate a new entry instead since
 		 * this one might get re-used too soon. */
@@ -288,7 +297,7 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	curr->dest_addr.s_addr = iph->daddr;
 	curr->src_port = src_port;
 	curr->count = 1;
-	curr->weight = (ntohs(dest_port) < 1024) ? psdinfo->lo_ports_weight : psdinfo->hi_ports_weight;
+	curr->weight = get_port_weight(psdinfo, dest_port);
 	curr->ports[0].number = dest_port;
 	curr->ports[0].proto = proto;
 
