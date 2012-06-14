@@ -30,6 +30,8 @@
 #include "xt_psd.h"
 #include "compat_user.h"
 
+#define SCAN_DELAY_THRESHOLD		300
+
 /* Function which prints out usage message. */
 static void psd_mt_help(void) {
 	printf(

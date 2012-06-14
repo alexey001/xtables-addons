@@ -40,6 +40,15 @@ MODULE_AUTHOR(" Mohd Nawawi Mohamad Jamili <nawawi@tracenetworkcorporation.com>"
 MODULE_DESCRIPTION("Xtables: PSD - portscan detection");
 MODULE_ALIAS("ipt_psd");
 
+/*
+ * Keep track of up to LIST_SIZE source addresses, using a hash table of
+ * HASH_SIZE entries for faster lookups, but limiting hash collisions to
+ * HASH_MAX source addresses per the same hash value.
+ */
+#define LIST_SIZE			0x100
+#define HASH_LOG			9
+#define HASH_SIZE			(1 << HASH_LOG)
+#define HASH_MAX			0x10
 
 /*
  * Information we keep per each target port
