@@ -61,9 +61,9 @@ struct host {
 	unsigned long timestamp;
 	struct in_addr src_addr;
 	struct in_addr dest_addr;
-	unsigned short src_port;
-	int count;
-	int weight;
+	__be16 src_port;
+	uint16_t count;
+	uint8_t weight;
 	struct port ports[SCAN_MAX_COUNT-1];
 };
 
@@ -77,6 +77,7 @@ static struct {
 	spinlock_t lock;
 	struct host list[LIST_SIZE];
 	struct host *hash[HASH_SIZE];
+	int index;
 } state;
 
 /*
