@@ -3,9 +3,10 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_INSTALL
-AM_INIT_AUTOMAKE([1.10b -Wall foreign subdir-objects])
+AM_INIT_AUTOMAKE([1.12 -Wall foreign subdir-objects])
 AC_PROG_CC
 AM_PROG_CC_C_O
+AM_PROG_AR
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
