@@ -19,17 +19,6 @@
 #define SCAN_MIN_COUNT			7
 #define SCAN_MAX_COUNT			(SCAN_MIN_COUNT * PORT_WEIGHT_PRIV)
 #define SCAN_WEIGHT_THRESHOLD		SCAN_MAX_COUNT
-#define SCAN_DELAY_THRESHOLD		(300) /* old usage of HZ here was erroneously and broke under uml */
-
-/*
- * Keep track of up to LIST_SIZE source addresses, using a hash table of
- * HASH_SIZE entries for faster lookups, but limiting hash collisions to
- * HASH_MAX source addresses per the same hash value.
- */
-#define LIST_SIZE			0x100
-#define HASH_LOG			9
-#define HASH_SIZE			(1 << HASH_LOG)
-#define HASH_MAX			0x10
 
 struct xt_psd_info {
 	__u32 weight_threshold;

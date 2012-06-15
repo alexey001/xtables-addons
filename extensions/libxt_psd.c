@@ -30,6 +30,8 @@
 #include "xt_psd.h"
 #include "compat_user.h"
 
+#define SCAN_DELAY_THRESHOLD		300
+
 /* Function which prints out usage message. */
 static void psd_mt_help(void) {
 	printf(
@@ -137,19 +139,19 @@ static void psd_mt_save(const void *ip, const struct xt_entry_match *match)
 }
 
 static struct xtables_match psd_mt_reg = {
-	.name			= "psd",
-	.version		= XTABLES_VERSION,
-	.revision   	= 1,
-	.family        = NFPROTO_IPV4,
-	.size			= XT_ALIGN(sizeof(struct xt_psd_info)),
+	.name           = "psd",
+	.version        = XTABLES_VERSION,
+	.revision       = 1,
+	.family         = NFPROTO_IPV4,
+	.size           = XT_ALIGN(sizeof(struct xt_psd_info)),
 	.userspacesize	= XT_ALIGN(sizeof(struct xt_psd_info)),
-	.help			= psd_mt_help,
-	.init			= psd_mt_init,
-	.parse			= psd_mt_parse,
-	.final_check	= psd_mt_final_check,
-	.print			= psd_mt_print,
-	.save			= psd_mt_save,
-	.extra_opts		= psd_mt_opts,
+	.help           = psd_mt_help,
+	.init           = psd_mt_init,
+	.parse          = psd_mt_parse,
+	.final_check    = psd_mt_final_check,
+	.print          = psd_mt_print,
+	.save           = psd_mt_save,
+	.extra_opts     = psd_mt_opts,
 };
 
 static __attribute__((constructor)) void psd_mt_ldr(void)

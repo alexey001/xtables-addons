@@ -3,6 +3,8 @@ HEAD
 ====
 Fixes:
 - xt_psd: avoid crash due to curr->next corruption
+Changes:
+- xt_psd: reject invalid match options
 
 
 v1.42 (2012-04-05)

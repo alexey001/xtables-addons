@@ -40,10 +40,15 @@ MODULE_AUTHOR(" Mohd Nawawi Mohamad Jamili <nawawi@tracenetworkcorporation.com>"
 MODULE_DESCRIPTION("Xtables: PSD - portscan detection");
 MODULE_ALIAS("ipt_psd");
 
-#define HF_DADDR_CHANGING   0x01
-#define HF_SPORT_CHANGING   0x02
-#define HF_TOS_CHANGING	    0x04
-#define HF_TTL_CHANGING	    0x08
+/*
+ * Keep track of up to LIST_SIZE source addresses, using a hash table of
+ * HASH_SIZE entries for faster lookups, but limiting hash collisions to
+ * HASH_MAX source addresses per the same hash value.
+ */
+#define LIST_SIZE			0x100
+#define HASH_LOG			9
+#define HASH_SIZE			(1 << HASH_LOG)
+#define HASH_MAX			0x10
 
 /*
  * Information we keep per each target port
@@ -51,35 +56,37 @@ MODULE_ALIAS("ipt_psd");
 struct port {
 	u_int16_t number;      /* port number */
 	u_int8_t proto;        /* protocol number */
-	u_int8_t and_flags;    /* tcp ANDed flags */
-	u_int8_t or_flags;     /* tcp ORed flags */
 };
 
-/*
+/**
  * Information we keep per each source address.
+ * @next:	next entry with the same hash
+ * @timestamp:	last update time
+ * @count:	number of ports in the list
+ * @weight:	total weight of ports in the list
  */
 struct host {
-	struct host *next;						/* Next entry with the same hash */
-	unsigned long timestamp;					/* Last update time */
-	struct in_addr src_addr;				/* Source address */
-	struct in_addr dest_addr;				/* Destination address */
-	unsigned short src_port;				/* Source port */
-	int count;								/* Number of ports in the list */
-	int weight;								/* Total weight of ports in the list */
-	struct port ports[SCAN_MAX_COUNT - 1];	/* List of ports */
-	unsigned char tos;						/* TOS */
-	unsigned char ttl;						/* TTL */
-	unsigned char flags;					/* HF_ flags bitmask */
+	struct host *next;
+	unsigned long timestamp;
+	struct in_addr src_addr;
+	struct in_addr dest_addr;
+	__be16 src_port;
+	uint16_t count;
+	uint8_t weight;
+	struct port ports[SCAN_MAX_COUNT-1];
 };
 
-/*
+/**
  * State information.
+ * @list:	list of source addresses
+ * @hash:	pointers into the list
+ * @index:	oldest entry to be replaced
  */
 static struct {
 	spinlock_t lock;
-	struct host list[LIST_SIZE];	/* List of source addresses */
-	struct host *hash[HASH_SIZE];	/* Hash: pointers into the list */
-	int index;						/* Oldest entry to be replaced */
+	struct host list[LIST_SIZE];
+	struct host *hash[HASH_SIZE];
+	int index;
 } state;
 
 /*
@@ -111,26 +118,20 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	} _buf;
 	struct in_addr addr;
 	u_int16_t src_port,dest_port;
-  	u_int8_t tcp_flags, proto;
+	u_int8_t proto;
 	unsigned long now;
 	struct host *curr, *last, **head;
 	int hash, index, count;
 	/* Parameters from userspace */
 	const struct xt_psd_info *psdinfo = match->matchinfo;
 
-	/* IP header */
 	iph = ip_hdr(pskb);
-
-	/* Sanity check */
 	if (iph->frag_off & htons(IP_OFFSET)) {
 		pr_debug("sanity check failed\n");
 		return false;
 	}
 
-	/* TCP or UDP ? */
 	proto = iph->protocol;
-	/* Get the source address, source & destination ports, and TCP flags */
-
 	addr.s_addr = iph->saddr;
 	/* We're using IP address 0.0.0.0 for a special purpose here, so don't let
 	 * them spoof us. [DHCP needs this feature - HW] */
@@ -148,7 +149,6 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 		/* Yep, it's dirty */
 		src_port = tcph->source;
 		dest_port = tcph->dest;
-		tcp_flags = *((u_int8_t*)tcph + 13);
 	} else if (proto == IPPROTO_UDP || proto == IPPROTO_UDPLITE) {
 		udph = skb_header_pointer(pskb, match->thoff,
 		       sizeof(_buf.udph), &_buf.udph);
@@ -156,14 +156,11 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 			return false;
 		src_port  = udph->source;
 		dest_port = udph->dest;
-		tcp_flags = 0;
 	} else {
 		pr_debug("protocol not supported\n");
 		return false;
 	}
 
-	/* Use jiffies here not to depend on someone setting the time while we're
-	 * running; we need to be careful with possible return value overflows. */
 	now = jiffies;
 
 	spin_lock(&state.lock);
@@ -181,7 +178,6 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 		} while ((curr = curr->next) != NULL);
 
 	if (curr != NULL) {
-
 		/* We know this address, and the entry isn't too old. Update it. */
 		if (now - curr->timestamp <= (psdinfo->delay_threshold*HZ)/100 &&
 		    time_after_eq(now, curr->timestamp)) {
@@ -190,8 +186,6 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 			for (index = 0; index < curr->count; index++) {
 				if (curr->ports[index].number == dest_port) {
 					curr->ports[index].proto = proto;
-					curr->ports[index].and_flags &= tcp_flags;
-					curr->ports[index].or_flags |= tcp_flags;
 					goto out_no_match;
 				}
 			}
@@ -203,26 +197,15 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 			/* Packet to a new port, and not TCP/ACK: update the timestamp */
 			curr->timestamp = now;
 
-			/* Logged this scan already? Then drop the packet. */
+			/* Matched this scan already? Then Leave. */
 			if (curr->weight >= psdinfo->weight_threshold)
 				goto out_match;
-
-			/* Specify if destination address, source port, TOS or TTL are not fixed */
-			if (curr->dest_addr.s_addr != iph->daddr)
-				curr->flags |= HF_DADDR_CHANGING;
-			if (curr->src_port != src_port)
-				curr->flags |= HF_SPORT_CHANGING;
-			if (curr->tos != iph->tos)
-				curr->flags |= HF_TOS_CHANGING;
-			if (curr->ttl != iph->ttl)
-				curr->flags |= HF_TTL_CHANGING;
 
 			/* Update the total weight */
 			curr->weight += (ntohs(dest_port) < 1024) ?
 				psdinfo->lo_ports_weight : psdinfo->hi_ports_weight;
 
 			/* Got enough destination ports to decide that this is a scan? */
-			/* Then log it and drop the packet. */
 			if (curr->weight >= psdinfo->weight_threshold)
 				goto out_match;
 
@@ -230,8 +213,6 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 			if (curr->count < ARRAY_SIZE(curr->ports)) {
 				curr->ports[curr->count].number = dest_port;
 				curr->ports[curr->count].proto = proto;
-				curr->ports[curr->count].and_flags = tcp_flags;
-				curr->ports[curr->count].or_flags = tcp_flags;
 				curr->count++;
 			}
 
@@ -303,10 +284,6 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	curr->weight = (ntohs(dest_port) < 1024) ? psdinfo->lo_ports_weight : psdinfo->hi_ports_weight;
 	curr->ports[0].number = dest_port;
 	curr->ports[0].proto = proto;
-	curr->ports[0].and_flags = tcp_flags;
-	curr->ports[0].or_flags = tcp_flags;
-	curr->tos = iph->tos;
-	curr->ttl = iph->ttl;
 
 out_no_match:
 	spin_unlock(&state.lock);
@@ -317,13 +294,35 @@ out_match:
 	return true;
 }
 
+static int psd_mt_check(const struct xt_mtchk_param *par)
+{
+	const struct xt_psd_info *info = par->matchinfo;
+
+	if (info->weight_threshold == 0)
+		/* 0 would match on every 1st packet */
+		return -EINVAL;
+
+	if ((info->lo_ports_weight | info->hi_ports_weight) == 0)
+		/* would never match */
+		return -EINVAL;
+
+	if (info->delay_threshold > PSD_MAX_RATE ||
+	    info->weight_threshold > PSD_MAX_RATE ||
+	    info->lo_ports_weight > PSD_MAX_RATE ||
+	    info->hi_ports_weight > PSD_MAX_RATE)
+		return -EINVAL;
+
+	return 0;
+}
+
 static struct xt_match xt_psd_reg __read_mostly = {
-	.name		= "psd",
-	.family    = NFPROTO_IPV4,
-	.revision  = 1,
-	.match		= xt_psd_match,
-	.matchsize	= sizeof(struct xt_psd_info),
-	.me			= THIS_MODULE,
+	.name       = "psd",
+	.family     = NFPROTO_IPV4,
+	.revision   = 1,
+	.checkentry = psd_mt_check,
+	.match      = xt_psd_match,
+	.matchsize  = sizeof(struct xt_psd_info),
+	.me         = THIS_MODULE,
 };
 
 static int __init xt_psd_init(void)
