@@ -19,6 +19,7 @@
  */
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+#include <linux/inet.h>
 #include <linux/ip.h>
 #include <linux/module.h>
 #include <linux/netdevice.h>
