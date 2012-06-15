@@ -49,28 +49,34 @@ struct port {
 	u_int8_t proto;        /* protocol number */
 };
 
-/*
+/**
  * Information we keep per each source address.
+ * @next:	next entry with the same hash
+ * @timestamp:	last update time
+ * @count:	number of ports in the list
+ * @weight:	total weight of ports in the list
  */
 struct host {
-	struct host *next;						/* Next entry with the same hash */
-	unsigned long timestamp;					/* Last update time */
-	struct in_addr src_addr;				/* Source address */
-	struct in_addr dest_addr;				/* Destination address */
-	unsigned short src_port;				/* Source port */
-	int count;								/* Number of ports in the list */
-	int weight;								/* Total weight of ports in the list */
-	struct port ports[SCAN_MAX_COUNT - 1];	/* List of ports */
+	struct host *next;
+	unsigned long timestamp;
+	struct in_addr src_addr;
+	struct in_addr dest_addr;
+	unsigned short src_port;
+	int count;
+	int weight;
+	struct port ports[SCAN_MAX_COUNT-1];
 };
 
-/*
+/**
  * State information.
+ * @list:	list of source addresses
+ * @hash:	pointers into the list
+ * @index:	oldest entry to be replaced
  */
 static struct {
 	spinlock_t lock;
-	struct host list[LIST_SIZE];	/* List of source addresses */
-	struct host *hash[HASH_SIZE];	/* Hash: pointers into the list */
-	int index;						/* Oldest entry to be replaced */
+	struct host list[LIST_SIZE];
+	struct host *hash[HASH_SIZE];
 } state;
 
 /*
