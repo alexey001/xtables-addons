@@ -185,7 +185,7 @@ llayer4_proto(const struct sk_buff *skb, unsigned int *offset, bool *hotdrop)
 	int err;
 
 	for (i = 0; i < ARRAY_SIZE(types); ++i) {
-		err = ipv6_find_hdr(skb, offset, types[i], NULL);
+		err = ipv6_find_hdr(skb, offset, types[i], NULL, NULL);
 		if (err >= 0)
 			return types[i];
 		if (err != -ENOENT) {

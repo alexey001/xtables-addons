@@ -119,6 +119,10 @@
 #	define NIPQUAD_FMT "%u.%u.%u.%u"
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
+#	define ipv6_find_hdr xtnu_ipv6_find_hdr
+#endif
+
 #define ip_route_me_harder    xtnu_ip_route_me_harder
 #define skb_make_writable     xtnu_skb_make_writable
 #define xt_target             xtnu_target

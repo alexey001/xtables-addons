@@ -16,6 +16,7 @@
 #include <linux/version.h>
 #include <linux/netfilter_ipv4.h>
 #include <linux/netfilter/x_tables.h>
+#include <linux/netfilter_ipv6/ip6_tables.h>
 #include <linux/netfilter_arp.h>
 #include <net/ip.h>
 #include <net/route.h>
@@ -611,5 +612,13 @@ void *HX_memmem(const void *space, size_t spacesize,
 	return NULL;
 }
 EXPORT_SYMBOL_GPL(HX_memmem);
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
+int xtnu_ipv6_find_hdr(const struct sk_buff *skb, unsigned int *offset,
+    int target, unsigned short *fragoff, int *fragflg)
+{
+	return ipv6_find_hdr(skb, offset, target, fragoff);
+}
+#endif
 
 MODULE_LICENSE("GPL");

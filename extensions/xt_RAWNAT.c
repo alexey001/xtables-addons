@@ -181,7 +181,7 @@ static bool rawnat6_prepare_l4(struct sk_buff **pskb, unsigned int *l4offset,
 	*l4proto = NEXTHDR_MAX;
 
 	for (i = 0; i < ARRAY_SIZE(types); ++i) {
-		err = ipv6_find_hdr(*pskb, l4offset, types[i], NULL);
+		err = ipv6_find_hdr(*pskb, l4offset, types[i], NULL, NULL);
 		if (err >= 0) {
 			*l4proto = types[i];
 			break;

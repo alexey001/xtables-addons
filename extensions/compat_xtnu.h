@@ -162,6 +162,8 @@ extern void xtnu_csum_replace4(__u16 __bitwise *, __be32, __be32);
 extern void xtnu_proto_csum_replace4(__u16 __bitwise *, struct sk_buff *,
 	__be32, __be32, bool);
 extern int xtnu_skb_linearize(struct sk_buff *);
+extern int xtnu_ipv6_find_hdr(const struct sk_buff *, unsigned int *,
+	int, unsigned short *, int *);
 
 extern void *HX_memmem(const void *, size_t, const void *, size_t);
 
