@@ -1,12 +1,19 @@
 
 HEAD
 ====
+
+
+v1.43 (2012-06-30)
+==================
 Fixes:
 - xt_psd: avoid crash due to curr->next corruption
 Changes:
 - xt_psd: reject invalid match options
 Enhancements:
 - Support for Linux 3.5
+- DNETMAP: new type: static binding
+- DNETMAP: new persistent flag option for prefix
+- DNETMAP: add write support to procfs interface
 
 
 v1.42 (2012-04-05)
