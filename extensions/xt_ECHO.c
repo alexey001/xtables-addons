@@ -18,6 +18,7 @@
 #	include <linux/netfilter_bridge.h>
 #endif
 #include <net/ip.h>
+#include <net/ip6_checksum.h>
 #include <net/ip6_route.h>
 #include <net/route.h>
 #include "compat_xtables.h"
