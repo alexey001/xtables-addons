@@ -78,6 +78,60 @@ static bool xttarpit_tarpit(struct tcphdr *tcph, const struct tcphdr *oth)
 	return true;
 }
 
+static bool xttarpit_honeypot(struct tcphdr *tcph, const struct tcphdr *oth,
+    uint16_t payload)
+{
+	/* Do not answer any resets regardless of combination */
+	if (oth->rst || oth->seq == 0xDEADBEEF)
+		return false;
+	/* Send a reset to scanners. They like that. */
+	if (oth->syn && oth->ack) {
+		tcph->window  = 0;
+		tcph->ack     = false;
+		tcph->psh     = true;
+		tcph->ack_seq = 0xdeadbeef; /* see if they ack it */
+		tcph->seq     = oth->ack_seq;
+		tcph->rst     = true;
+	}
+
+	/* SYN > SYN-ACK */
+	if (oth->syn && !oth->ack) {
+		tcph->syn     = true;
+		tcph->ack     = true;
+		tcph->window  = oth->window &
+			((net_random() & 0x1f) - 0xf);
+		tcph->seq     = htonl(net_random() & ~oth->seq);
+		tcph->ack_seq = htonl(ntohl(oth->seq) + oth->syn);
+	}
+
+	/* ACK > ACK */
+	if (oth->ack && (!(oth->fin || oth->syn))) {
+		tcph->syn     = false;
+		tcph->ack     = true;
+		tcph->window  = oth->window &
+			((net_random() & 0x1f) - 0xf);
+		tcph->ack_seq = payload > 100 ?
+			htonl(ntohl(oth->seq) + payload) :
+			oth->seq;
+		tcph->seq     = oth->ack_seq;
+	}
+
+	/*
+	 * FIN > RST.
+	 * We cannot terminate gracefully so just be abrupt.
+	 */
+	if (oth->fin) {
+		tcph->window  = 0;
+		tcph->seq     = oth->ack_seq;
+		tcph->ack_seq = oth->ack_seq;
+		tcph->fin     = false;
+		tcph->ack     = false;
+		tcph->rst     = true;
+	}
+
+	return true;
+}
+
 static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
     unsigned int mode)
 {
@@ -148,53 +202,8 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 		if (!xttarpit_tarpit(tcph, oth))
 			return;
 	} else if (mode == XTTARPIT_HONEYPOT) {
-		/* Do not answer any resets regardless of combination */
-		if (oth->rst || oth->seq == 0xDEADBEEF)
+		if (!xttarpit_honeypot(tcph, oth, payload))
 			return;
-		/* Send a reset to scanners. They like that. */
-		if (oth->syn && oth->ack) {
-			tcph->window  = 0;
-			tcph->ack     = false;
-			tcph->psh     = true;
-			tcph->ack_seq = 0xdeadbeef; /* see if they ack it */
-			tcph->seq     = oth->ack_seq;
-			tcph->rst     = true;
-		}
-
-		/* SYN > SYN-ACK */
-		if (oth->syn && !oth->ack) {
-			tcph->syn     = true;
-			tcph->ack     = true;
-			tcph->window  = oth->window &
-			                ((net_random() & 0x1f) - 0xf);
-			tcph->seq     = htonl(net_random() & ~oth->seq);
-			tcph->ack_seq = htonl(ntohl(oth->seq) + oth->syn);
-		}
-
-		/* ACK > ACK */
-		if (oth->ack && (!(oth->fin || oth->syn))) {
-			tcph->syn     = false;
-			tcph->ack     = true;
-			tcph->window  = oth->window &
-			                ((net_random() & 0x1f) - 0xf);
-			tcph->ack_seq = payload > 100 ?
-			                htonl(ntohl(oth->seq) + payload) :
-			                oth->seq;
-			tcph->seq     = oth->ack_seq;
-		}
-
-		/*
-		 * FIN > RST.
-		 * We cannot terminate gracefully so just be abrupt.
-		 */
-		if (oth->fin) {
-			tcph->window  = 0;
-			tcph->seq     = oth->ack_seq;
-			tcph->ack_seq = oth->ack_seq;
-			tcph->fin     = false;
-			tcph->ack     = false;
-			tcph->rst     = true;
-		}
 	} else if (mode == XTTARPIT_RESET) {
 		tcph->window  = 0;
 		tcph->ack     = false;
