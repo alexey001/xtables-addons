@@ -54,7 +54,8 @@
 static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
     unsigned int mode)
 {
-	struct tcphdr _otcph, *oth, *tcph;
+	struct tcphdr _otcph, *tcph;
+	const struct tcphdr *oth;
 	unsigned int addr_type = RTN_UNSPEC;
 	struct sk_buff *nskb;
 	const struct iphdr *oldhdr;
