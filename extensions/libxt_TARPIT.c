@@ -106,7 +106,7 @@ static void tarpit_tg_save(const void *ip,
 static struct xtables_target tarpit_tg_reg = {
 	.version       = XTABLES_VERSION,
 	.name          = "TARPIT",
-	.family        = NFPROTO_IPV4,
+	.family        = NFPROTO_UNSPEC,
 	.size          = XT_ALIGN(sizeof(struct xt_tarpit_tginfo)),
 	.userspacesize = XT_ALIGN(sizeof(struct xt_tarpit_tginfo)),
 	.help          = tarpit_tg_help,
