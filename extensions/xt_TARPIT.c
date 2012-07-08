@@ -51,6 +51,33 @@
 #include "compat_xtables.h"
 #include "xt_TARPIT.h"
 
+static bool xttarpit_tarpit(struct tcphdr *tcph, const struct tcphdr *oth)
+{
+	/* No replies for RST, FIN or !SYN,!ACK */
+	if (oth->rst || oth->fin || (!oth->syn && !oth->ack))
+		return false;
+	tcph->seq = oth->ack ? oth->ack_seq : 0;
+
+	/* Our SYN-ACKs must have a >0 window */
+	tcph->window = (oth->syn && !oth->ack) ? htons(5) : 0;
+	if (oth->syn && oth->ack) {
+		tcph->rst     = true;
+		tcph->ack_seq = false;
+	} else {
+		tcph->syn     = oth->syn;
+		tcph->ack     = true;
+		tcph->ack_seq = htonl(ntohl(oth->seq) + oth->syn);
+	}
+#if 0
+	/* Rate-limit replies to !SYN,ACKs */
+	if (!oth->syn && oth->ack)
+		if (!xrlim_allow(rt_dst(ort), HZ))
+			return false;
+#endif
+
+	return true;
+}
+
 static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
     unsigned int mode)
 {
@@ -118,27 +145,8 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 	((u_int8_t *)tcph)[13] = 0;
 
 	if (mode == XTTARPIT_TARPIT) {
-		/* No replies for RST, FIN or !SYN,!ACK */
-		if (oth->rst || oth->fin || (!oth->syn && !oth->ack))
+		if (!xttarpit_tarpit(tcph, oth))
 			return;
-		tcph->seq = oth->ack ? oth->ack_seq : 0;
-
-		/* Our SYN-ACKs must have a >0 window */
-		tcph->window  = (oth->syn && !oth->ack) ? htons(5) : 0;
-		if (oth->syn && oth->ack) {
-			tcph->rst     = true;
-			tcph->ack_seq = false;
-		} else {
-			tcph->syn     = oth->syn;
-			tcph->ack     = true;
-			tcph->ack_seq = htonl(ntohl(oth->seq) + oth->syn);
-		}
-#if 0
-		/* Rate-limit replies to !SYN,ACKs */
-		if (!oth->syn && oth->ack)
-			if (!xrlim_allow(rt_dst(ort), HZ))
-				return;
-#endif
 	} else if (mode == XTTARPIT_HONEYPOT) {
 		/* Do not answer any resets regardless of combination */
 		if (oth->rst || oth->seq == 0xDEADBEEF)
