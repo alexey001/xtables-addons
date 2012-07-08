@@ -142,6 +142,26 @@ static void xttarpit_reset(struct tcphdr *tcph, const struct tcphdr *oth)
 	tcph->ack_seq = oth->seq;
 }
 
+static bool tarpit_generic(struct tcphdr *tcph, const struct tcphdr *oth,
+    uint16_t payload, unsigned int mode)
+{
+	switch(mode) {
+	case XTTARPIT_TARPIT:
+		if (!xttarpit_tarpit(tcph, oth))
+			return false;
+		break;
+	case XTTARPIT_HONEYPOT:
+		if (!xttarpit_honeypot(tcph, oth, payload))
+			return false;
+		break;
+	case XTTARPIT_RESET:
+		xttarpit_reset(tcph, oth);
+		break;
+	}
+
+	return true;
+}
+
 static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
     unsigned int mode)
 {
@@ -208,15 +228,8 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 	/* Reset flags */
 	((u_int8_t *)tcph)[13] = 0;
 
-	if (mode == XTTARPIT_TARPIT) {
-		if (!xttarpit_tarpit(tcph, oth))
-			return;
-	} else if (mode == XTTARPIT_HONEYPOT) {
-		if (!xttarpit_honeypot(tcph, oth, payload))
-			return;
-	} else if (mode == XTTARPIT_RESET) {
-		xttarpit_reset(tcph, oth);
-	}
+	if (!tarpit_generic(tcph, oth, payload, mode))
+		return;
 
 	/* Adjust TCP checksum */
 	tcph->check = 0;
