@@ -132,6 +132,16 @@ static bool xttarpit_honeypot(struct tcphdr *tcph, const struct tcphdr *oth,
 	return true;
 }
 
+static void xttarpit_reset(struct tcphdr *tcph, const struct tcphdr *oth)
+{
+	tcph->window  = 0;
+	tcph->ack     = false;
+	tcph->syn     = false;
+	tcph->rst     = true;
+	tcph->seq     = oth->ack_seq;
+	tcph->ack_seq = oth->seq;
+}
+
 static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
     unsigned int mode)
 {
@@ -205,12 +215,7 @@ static void tarpit_tcp(struct sk_buff *oldskb, unsigned int hook,
 		if (!xttarpit_honeypot(tcph, oth, payload))
 			return;
 	} else if (mode == XTTARPIT_RESET) {
-		tcph->window  = 0;
-		tcph->ack     = false;
-		tcph->syn     = false;
-		tcph->rst     = true;
-		tcph->seq     = oth->ack_seq;
-		tcph->ack_seq = oth->seq;
+		xttarpit_reset(tcph, oth);
 	}
 
 	/* Adjust TCP checksum */
