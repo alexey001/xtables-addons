@@ -96,6 +96,7 @@
 #	define nf_nat_ipv4_multi_range_compat nf_nat_multi_range_compat
 #	define nf_nat_ipv4_range nf_nat_range
 #	define NF_NAT_RANGE_MAP_IPS IP_NAT_RANGE_MAP_IPS
+#	define ipv6_skip_exthdr xtnu_ipv6_skip_exthdr
 #endif
 
 #if !defined(NIP6) && !defined(NIP6_FMT)
