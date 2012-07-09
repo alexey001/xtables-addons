@@ -613,6 +613,14 @@ void *HX_memmem(const void *space, size_t spacesize,
 }
 EXPORT_SYMBOL_GPL(HX_memmem);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 3, 0)
+int xtnu_ipv6_skip_exthdr(const struct sk_buff *skb, int start,
+    uint8_t *nexthdrp, __be16 *fragoffp)
+{
+	return ipv6_skip_exthdr(skb, start, nexthdrp);
+}
+#endif
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
 int xtnu_ipv6_find_hdr(const struct sk_buff *skb, unsigned int *offset,
     int target, unsigned short *fragoff, int *fragflg)
