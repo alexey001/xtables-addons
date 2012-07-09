@@ -19,6 +19,7 @@
 #include <linux/netfilter_ipv6/ip6_tables.h>
 #include <linux/netfilter_arp.h>
 #include <net/ip.h>
+#include <net/ipv6.h>
 #include <net/route.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
 #	include <linux/export.h>
