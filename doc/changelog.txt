@@ -1,6 +1,8 @@
 
 HEAD
 ====
+Enhancements:
+- TARPIT gained IPv6 support
 
 
 v1.43 (2012-06-30)
