@@ -359,10 +359,7 @@ static int __init sysrq_crypto_init(void)
 		goto fail;
 	do_gettimeofday(&now);
 	sysrq_seqno = now.tv_sec;
-	ret = xt_register_targets(sysrq_tg_reg, ARRAY_SIZE(sysrq_tg_reg));
-	if (ret < 0)
-		goto fail;
-	return ret;
+	return 0;
 
  fail:
 	sysrq_crypto_exit();
