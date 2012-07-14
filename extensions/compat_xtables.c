@@ -26,6 +26,9 @@
 #endif
 #include "compat_skbuff.h"
 #include "compat_xtnu.h"
+#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
+#	define WITH_IPV6 1
+#endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 static int xtnu_match_run(const struct sk_buff *skb,
@@ -614,7 +617,7 @@ void *HX_memmem(const void *space, size_t spacesize,
 }
 EXPORT_SYMBOL_GPL(HX_memmem);
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 3, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 3, 0) && defined(WITH_IPV6)
 int xtnu_ipv6_skip_exthdr(const struct sk_buff *skb, int start,
     uint8_t *nexthdrp, __be16 *fragoffp)
 {
@@ -622,7 +625,7 @@ int xtnu_ipv6_skip_exthdr(const struct sk_buff *skb, int start,
 }
 #endif
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0) && defined(WITH_IPV6)
 int xtnu_ipv6_find_hdr(const struct sk_buff *skb, unsigned int *offset,
     int target, unsigned short *fragoff, int *fragflg)
 {

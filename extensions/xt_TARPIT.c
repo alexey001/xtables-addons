@@ -55,6 +55,9 @@
 #include <net/tcp.h>
 #include "compat_xtables.h"
 #include "xt_TARPIT.h"
+#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
+#	define WITH_IPV6 1
+#endif
 
 static bool xttarpit_tarpit(struct tcphdr *tcph, const struct tcphdr *oth)
 {
@@ -298,6 +301,7 @@ static void tarpit_tcp4(struct sk_buff *oldskb, unsigned int hook,
 	kfree_skb(nskb);
 }
 
+#ifdef WITH_IPV6
 static void tarpit_tcp6(struct sk_buff *oldskb, unsigned int hook,
     unsigned int mode)
 {
@@ -420,6 +424,7 @@ static void tarpit_tcp6(struct sk_buff *oldskb, unsigned int hook,
  free_nskb:
 	kfree_skb(nskb);
 }
+#endif
 
 static unsigned int
 tarpit_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
@@ -457,6 +462,7 @@ tarpit_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
 	return NF_DROP;
 }
 
+#ifdef WITH_IPV6
 static unsigned int
 tarpit_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
 {
@@ -498,6 +504,7 @@ tarpit_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
 	tarpit_tcp6(*pskb, par->hooknum, info->variant);
 	return NF_DROP;
 }
+#endif
 
 static struct xt_target tarpit_tg_reg[] __read_mostly = {
 	{
@@ -510,6 +517,7 @@ static struct xt_target tarpit_tg_reg[] __read_mostly = {
 		.targetsize = sizeof(struct xt_tarpit_tginfo),
 		.me         = THIS_MODULE,
 	},
+#ifdef WITH_IPV6
 	{
 		.name       = "TARPIT",
 		.revision   = 0,
@@ -520,6 +528,7 @@ static struct xt_target tarpit_tg_reg[] __read_mostly = {
 		.targetsize = sizeof(struct xt_tarpit_tginfo),
 		.me         = THIS_MODULE,
 	},
+#endif
 };
 
 static int __init tarpit_tg_init(void)
