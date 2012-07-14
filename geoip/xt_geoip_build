@@ -3,8 +3,6 @@
 #	Converter for MaxMind CSV database to binary, for xt_geoip
 #	Copyright © Jan Engelhardt <jengelh@medozas.de>, 2008-2011
 #
-#	Use -b argument to create big-endian tables.
-#
 use Getopt::Long;
 use IO::Handle;
 use Text::CSV_XS; # or trade for Text::CSV
