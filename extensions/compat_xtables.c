@@ -26,7 +26,7 @@
 #endif
 #include "compat_skbuff.h"
 #include "compat_xtnu.h"
-#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
+#if defined(CONFIG_IP6_NF_IPTABLES) || defined(CONFIG_IP6_NF_IPTABLES_MODULE)
 #	define WITH_IPV6 1
 #endif
 

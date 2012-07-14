@@ -22,8 +22,7 @@
 #include <net/ipv6.h>
 #include "compat_xtables.h"
 #include "xt_RAWNAT.h"
-
-#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
+#if defined(CONFIG_IP6_NF_IPTABLES) || defined(CONFIG_IP6_NF_IPTABLES_MODULE)
 #	define WITH_IPV6 1
 #endif
 

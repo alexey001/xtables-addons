@@ -3,7 +3,7 @@ HEAD
 ====
 Fixes:
 - SYSRQ: fix double target initialization at module load
-- build: do not attempt to build IPv6 parts if CONFIG_IPV6=n
+- build: do not attempt to build IPv6 parts if CONFIG_IP6_NF_IPTABLES=n
 Enhancements:
 - TARPIT gained IPv6 support
 

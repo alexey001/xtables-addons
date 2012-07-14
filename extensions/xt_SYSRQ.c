@@ -30,7 +30,7 @@
     (defined(CONFIG_CRYPTO) || defined(CONFIG_CRYPTO_MODULE))
 #	define WITH_CRYPTO 1
 #endif
-#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
+#if defined(CONFIG_IP6_NF_IPTABLES) || defined(CONFIG_IP6_NF_IPTABLES_MODULE)
 #	define WITH_IPV6 1
 #endif
 
