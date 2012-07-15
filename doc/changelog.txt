@@ -1,6 +1,10 @@
 
 HEAD
 ====
+
+
+v1.44 (2012-07-15)
+==================
 Fixes:
 - SYSRQ: fix double target initialization at module load
 - build: do not attempt to build IPv6 parts if CONFIG_IP6_NF_IPTABLES=n
