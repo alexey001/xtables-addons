@@ -623,6 +623,7 @@ int xtnu_ipv6_skip_exthdr(const struct sk_buff *skb, int start,
 {
 	return ipv6_skip_exthdr(skb, start, nexthdrp);
 }
+EXPORT_SYMBOL_GPL(xtnu_ipv6_skip_exthdr);
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0) && defined(WITH_IPV6)
@@ -631,6 +632,7 @@ int xtnu_ipv6_find_hdr(const struct sk_buff *skb, unsigned int *offset,
 {
 	return ipv6_find_hdr(skb, offset, target, fragoff);
 }
+EXPORT_SYMBOL_GPL(xtnu_ipv6_find_hdr);
 #endif
 
 MODULE_LICENSE("GPL");

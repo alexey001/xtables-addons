@@ -1,6 +1,9 @@
 
 HEAD
 ====
+Fixes:
+- build: export missing functions
+  (fixes: "WARNING 'xtnu_ipv6_find_hdr' [xt_TARPIT.ko] not found")
 
 
 v1.44 (2012-07-15)
