@@ -374,16 +374,15 @@ static void tarpit_tcp6(struct sk_buff *oldskb, unsigned int hook,
 	ip6h->daddr = oip6h->saddr;
 
 	/* Adjust IP TTL */
-	if (mode == XTTARPIT_HONEYPOT)
+	if (mode == XTTARPIT_HONEYPOT) {
 		ip6h->hop_limit = 128;
-	else
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
+	} else {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
 		ip6h->hop_limit = ip6_dst_hoplimit(skb_dst(nskb));
 #else
-		ip6h->hop_limit = dst_metric(dst, RTAX_HOPLIMIT);
-		if (ip6h->hop_limit < 0)
-			ip6h->hop_limit = ipv6_get_hoplimit((skb_dst(nskb))->dev).
+		ip6h->hop_limit = dst_metric(skb_dst(nskb), RTAX_HOPLIMIT);
 #endif
+	}
 
 	tcph = (struct tcphdr *)(skb_network_header(nskb) +
 	       sizeof(struct ipv6hdr));

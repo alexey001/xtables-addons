@@ -4,6 +4,9 @@ HEAD
 Fixes:
 - build: export missing functions
   (fixes: "WARNING 'xtnu_ipv6_find_hdr' [xt_TARPIT.ko] not found")
+- build: avoid use of unexported functions
+  (fixes: "WARNING 'ipv6_find_hdr' [xt_TARPIT.ko] not found"
+  in <= linux-2.6.37)
 
 
 v1.44 (2012-07-15)
