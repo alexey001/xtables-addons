@@ -244,7 +244,7 @@ static unsigned int
 rawsnat_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	const struct xt_rawnat_tginfo *info = par->targinfo;
-	unsigned int l4offset, l4proto;
+	unsigned int l4offset = 0, l4proto;
 	struct ipv6hdr *iph;
 	struct in6_addr new_addr;
 
@@ -265,7 +265,7 @@ static unsigned int
 rawdnat_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
 {
 	const struct xt_rawnat_tginfo *info = par->targinfo;
-	unsigned int l4offset, l4proto;
+	unsigned int l4offset = 0, l4proto;
 	struct ipv6hdr *iph;
 	struct in6_addr new_addr;
 

@@ -240,7 +240,7 @@ sysrq_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
 	const struct ipv6hdr *iph;
 	const struct udphdr *udph;
 	unsigned short frag_off;
-	unsigned int th_off;
+	unsigned int th_off = 0;
 	uint16_t len;
 
 	if (skb_linearize(skb) < 0)

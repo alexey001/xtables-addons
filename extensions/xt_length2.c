@@ -203,7 +203,8 @@ length2_mt6(const struct sk_buff *skb, struct xt_action_param *par)
 	const struct xt_length_mtinfo2 *info = par->matchinfo;
 	const struct ipv6hdr *iph = ipv6_hdr(skb);
 	unsigned int len = 0, l4proto;
-	unsigned int thoff = par->thoff;
+	/* par->thoff would only set if ip6tables -p was used; so just use 0 */
+	unsigned int thoff = 0;
 	bool hit = true;
 
 	if (info->flags & XT_LENGTH_LAYER3) {
