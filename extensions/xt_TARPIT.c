@@ -237,7 +237,7 @@ static void tarpit_tcp4(struct sk_buff *oldskb, unsigned int hook,
 	((u_int8_t *)tcph)[13] = 0;
 
 	if (!tarpit_generic(tcph, oth, payload, mode))
-		return;
+		goto free_nskb;
 
 	/* Adjust TCP checksum */
 	tcph->check = 0;
@@ -398,7 +398,7 @@ static void tarpit_tcp6(struct sk_buff *oldskb, unsigned int hook,
 
 	payload = nskb->len - sizeof(struct ipv6hdr) - sizeof(struct tcphdr);
 	if (!tarpit_generic(&oth, tcph, payload, mode))
-		return;
+		goto free_nskb;
 
 	ip6h->payload_len = htons(sizeof(struct tcphdr));
 	tcph->check = 0;

@@ -3,6 +3,7 @@ HEAD
 ====
 Fixes:
 - length2, SYSRQ, RAWNAT: preinitialize values for ipv6_find_hdr
+- TARPIT: fix memory leak when tarpit_generic() fails
 
 
 v1.45 (2012-07-16)
