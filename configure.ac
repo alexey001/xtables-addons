@@ -31,7 +31,7 @@ xtlibdir="$(pkg-config --variable=xtlibdir xtables)"
 
 AC_ARG_WITH([xtlibdir],
 	AS_HELP_STRING([--with-xtlibdir=PATH],
-	[Path where to install Xtables extensions [[autodetect]]]]),
+	[Path where to install Xtables extensions [[autodetect]]]),
 	[xtlibdir="$withval"])
 AC_MSG_CHECKING([Xtables module directory])
 AC_MSG_RESULT([$xtlibdir])

@@ -4,6 +4,7 @@ HEAD
 Fixes:
 - length2, SYSRQ, RAWNAT: preinitialize values for ipv6_find_hdr
 - TARPIT: fix memory leak when tarpit_generic() fails
+- build: build: remove extraneous closing bracket in configure.ac
 
 
 v1.45 (2012-07-16)
