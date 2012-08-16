@@ -149,6 +149,29 @@ is_portscan(struct host *host, const struct xt_psd_info *psdinfo,
 	return false;
 }
 
+static struct host *host_get_next(struct host *h, struct host **last)
+{
+	if (h->next != NULL)
+		*last = h;
+	return h->next;
+}
+
+static void ht_unlink(struct host **head, struct host *last)
+{
+	if (last != NULL)
+		last->next = last->next->next;
+	else if (*head != NULL)
+		*head = (*head)->next;
+}
+
+static bool
+entry_is_recent(const struct host *h, unsigned long delay_threshold,
+                unsigned long now)
+{
+	return now - h->timestamp <= (delay_threshold * HZ) / 100 &&
+	       time_after_eq(now, h->timestamp);
+}
+
 static bool
 xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 {
@@ -216,16 +239,12 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 		if (curr->src_addr.s_addr == addr.s_addr)
 			break;
 		count++;
-		if (curr->next != NULL)
-			last = curr;
-		curr = curr->next;
+		curr = host_get_next(curr, &last);
 	}
 
 	if (curr != NULL) {
 		/* We know this address, and the entry isn't too old. Update it. */
-		if (now - curr->timestamp <= (psdinfo->delay_threshold*HZ)/100 &&
-		    time_after_eq(now, curr->timestamp)) {
-
+		if (entry_is_recent(curr, psdinfo->delay_threshold, now)) {
 			if (port_in_list(curr, proto, dest_port))
 				goto out_no_match;
 			/* TCP/ACK and/or TCP/RST to a new port? This could be an outgoing connection. */
@@ -240,10 +259,7 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 		 * remove from the hash table. We'll allocate a new entry instead since
 		 * this one might get re-used too soon. */
 		curr->src_addr.s_addr = 0;
-		if (last != NULL)
-			last->next = last->next->next;
-		else if (*head != NULL)
-			*head = (*head)->next;
+		ht_unlink(head, last);
 		last = NULL;
 	}
 
