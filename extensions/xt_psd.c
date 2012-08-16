@@ -163,8 +163,8 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	u_int16_t src_port,dest_port;
 	u_int8_t proto;
 	unsigned long now;
-	struct host *curr, *last, **head;
-	int hash, count;
+	struct host *curr, *last = NULL, **head;
+	int hash, count = 0;
 	/* Parameters from userspace */
 	const struct xt_psd_info *psdinfo = match->matchinfo;
 
@@ -205,20 +205,21 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	}
 
 	now = jiffies;
+	hash = hashfunc(addr);
+	head = &state.hash[hash];
 
 	spin_lock(&state.lock);
 
 	/* Do we know this source address already? */
-	count = 0;
-	last = NULL;
-	if ((curr = *(head = &state.hash[hash = hashfunc(addr)])) != NULL)
-		do {
-			if (curr->src_addr.s_addr == addr.s_addr)
-				break;
-			count++;
-			if (curr->next != NULL)
-				last = curr;
-		} while ((curr = curr->next) != NULL);
+	curr = *head;
+	while (curr != NULL) {
+		if (curr->src_addr.s_addr == addr.s_addr)
+			break;
+		count++;
+		if (curr->next != NULL)
+			last = curr;
+		curr = curr->next;
+	}
 
 	if (curr != NULL) {
 		/* We know this address, and the entry isn't too old. Update it. */
@@ -266,12 +267,13 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	else
 		head = &last;
 	last = NULL;
-	if ((curr = *head) != NULL)
-		do {
-			if (curr == &state.list[state.index])
-				break;
-			last = curr;
-		} while ((curr = curr->next) != NULL);
+	curr = *head;
+	while (curr != NULL) {
+		if (curr == &state.list[state.index])
+			break;
+		last = curr;
+		curr = curr->next;
+	}
 
 	/* Then, remove it */
 	if (curr != NULL) {
