@@ -68,12 +68,24 @@ struct port {
 struct host {
 	struct host *next;
 	unsigned long timestamp;
-	struct in_addr src_addr;
 	__be16 src_port;
 	uint16_t count;
 	uint8_t weight;
 	struct port ports[SCAN_MAX_COUNT-1];
 };
+
+/**
+ * Information we keep per ipv4 source address.
+ */
+struct host4 {
+	struct host host;
+	__be32 saddr;
+};
+
+static struct host4 *host_to_host4(const struct host *h)
+{
+	return (struct host4 *)h;
+}
 
 /**
  * State information.
@@ -83,7 +95,7 @@ struct host {
  */
 static struct {
 	spinlock_t lock;
-	struct host list[LIST_SIZE];
+	struct host4 list[LIST_SIZE];
 	struct host *hash[HASH_SIZE];
 	int index;
 } state;
@@ -185,6 +197,7 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	u_int8_t proto;
 	unsigned long now;
 	struct host *curr, *last = NULL, **head;
+	struct host4 *curr4;
 	int count = 0;
 	unsigned int hash;
 	/* Parameters from userspace */
@@ -232,7 +245,8 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	/* Do we know this source address already? */
 	curr = *head;
 	while (curr != NULL) {
-		if (curr->src_addr.s_addr == iph->saddr)
+		curr4 = host_to_host4(curr);
+		if (curr4->saddr == iph->saddr)
 			break;
 		count++;
 		curr = host_get_next(curr, &last);
@@ -254,7 +268,8 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 		/* We know this address, but the entry is outdated. Mark it unused, and
 		 * remove from the hash table. We'll allocate a new entry instead since
 		 * this one might get re-used too soon. */
-		curr->src_addr.s_addr = 0;
+		curr4 = host_to_host4(curr);
+		curr4->saddr = 0;
 		ht_unlink(head, last);
 		last = NULL;
 	}
@@ -274,14 +289,15 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	 * hash table already because of the HASH_MAX check above). */
 
 	/* First, find it */
-	if (state.list[state.index].src_addr.s_addr != 0)
-		head = &state.hash[hashfunc(state.list[state.index].src_addr.s_addr)];
+	if (state.list[state.index].saddr != 0)
+		head = &state.hash[hashfunc(state.list[state.index].saddr)];
 	else
 		head = &last;
 	last = NULL;
 	curr = *head;
 	while (curr != NULL) {
-		if (curr == &state.list[state.index])
+		curr4 = host_to_host4(curr);
+		if (curr4 == &state.list[state.index])
 			break;
 		last = curr;
 		curr = curr->next;
@@ -296,7 +312,8 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	}
 
 	/* Get our list entry */
-	curr = &state.list[state.index++];
+	curr4 = &state.list[state.index++];
+	curr = &curr4->host;
 	if (state.index >= LIST_SIZE)
 		state.index = 0;
 
@@ -306,7 +323,8 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	*head = curr;
 
 	/* And fill in the fields */
-	curr->src_addr.s_addr = iph->saddr;
+	curr4 = host_to_host4(curr);
+	curr4->saddr = iph->saddr;
 	curr->timestamp = now;
 	curr->count = 1;
 	curr->weight = get_port_weight(psdinfo, dest_port);
