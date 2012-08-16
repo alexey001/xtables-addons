@@ -183,6 +183,27 @@ entry_is_recent(const struct host *h, unsigned long delay_threshold,
 	       time_after_eq(now, h->timestamp);
 }
 
+static void remove_oldest(struct host **head, struct host *curr)
+{
+	struct host *h, *last = NULL;
+
+	/*
+	 * We are going to re-use the oldest list entry, so remove it from the
+	 * hash table first, if it is really already in use.
+	 */
+	h = *head;
+	while (h != NULL) {
+		if (curr == h)
+			break;
+		last = h;
+		h = h->next;
+	}
+
+	/* Then, remove it */
+	if (h != NULL)
+		ht_unlink(head, last);
+}
+
 static bool
 xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 {
@@ -284,36 +305,15 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	if (count >= HASH_MAX && last != NULL)
 		last->next = NULL;
 
-	/* We're going to re-use the oldest list entry, so remove it from the hash
-	 * table first (if it is really already in use, and isn't removed from the
-	 * hash table already because of the HASH_MAX check above). */
-
-	/* First, find it */
 	if (state.list[state.index].saddr != 0)
 		head = &state.hash[hashfunc(state.list[state.index].saddr)];
 	else
 		head = &last;
-	last = NULL;
-	curr = *head;
-	while (curr != NULL) {
-		curr4 = host_to_host4(curr);
-		if (curr4 == &state.list[state.index])
-			break;
-		last = curr;
-		curr = curr->next;
-	}
-
-	/* Then, remove it */
-	if (curr != NULL) {
-		if (last != NULL)
-			last->next = last->next->next;
-		else if (*head != NULL)
-			*head = (*head)->next;
-	}
 
 	/* Get our list entry */
 	curr4 = &state.list[state.index++];
 	curr = &curr4->host;
+	remove_oldest(head, curr);
 	if (state.index >= LIST_SIZE)
 		state.index = 0;
 
