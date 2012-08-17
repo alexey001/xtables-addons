@@ -237,19 +237,15 @@ get_header_pointer4(const struct sk_buff *skb, unsigned int thoff, void *mem)
 
 static bool
 handle_packet4(const struct iphdr *iph, const struct tcphdr *tcph,
-               const struct xt_psd_info *psdinfo)
+               const struct xt_psd_info *psdinfo, unsigned int hash)
 {
 	unsigned long now;
 	struct host *curr, *last = NULL, **head;
 	struct host4 *curr4;
 	int count = 0;
-	unsigned int hash;
 
 	now = jiffies;
-	hash = hashfunc(iph->saddr);
 	head = &state.hash[hash];
-
-	spin_lock(&state.lock);
 
 	/* Do we know this source address already? */
 	curr = *head;
@@ -263,11 +259,9 @@ handle_packet4(const struct iphdr *iph, const struct tcphdr *tcph,
 
 	if (curr != NULL) {
 		/* We know this address, and the entry isn't too old. Update it. */
-		if (entry_is_recent(curr, psdinfo->delay_threshold, now)) {
-			if (is_portscan(curr, psdinfo, tcph, iph->protocol))
-				goto out_match;
-			goto out_no_match;
-		}
+		if (entry_is_recent(curr, psdinfo->delay_threshold, now))
+			return is_portscan(curr, psdinfo, tcph, iph->protocol);
+
 		/* We know this address, but the entry is outdated. Mark it unused, and
 		 * remove from the hash table. We'll allocate a new entry instead since
 		 * this one might get re-used too soon. */
@@ -279,7 +273,7 @@ handle_packet4(const struct iphdr *iph, const struct tcphdr *tcph,
 
 	/* We don't need an ACK from a new source address */
 	if (iph->protocol == IPPROTO_TCP && tcph->ack)
-		goto out_no_match;
+		return false;
 
 	/* Got too many source addresses with the same hash value? Then remove the
 	 * oldest one from the hash table, so that they can't take too much of our
@@ -312,14 +306,7 @@ handle_packet4(const struct iphdr *iph, const struct tcphdr *tcph,
 	curr->weight = get_port_weight(psdinfo, tcph->dest);
 	curr->ports[0].number = tcph->dest;
 	curr->ports[0].proto = iph->protocol;
-
-out_no_match:
-	spin_unlock(&state.lock);
 	return false;
-
-out_match:
-	spin_unlock(&state.lock);
-	return true;
 }
 
 static bool
@@ -328,6 +315,8 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	struct iphdr *iph = ip_hdr(pskb);
 	struct tcphdr _tcph;
 	struct tcphdr *tcph;
+	bool matched;
+	unsigned int hash;
 	/* Parameters from userspace */
 	const struct xt_psd_info *psdinfo = match->matchinfo;
 
@@ -349,7 +338,12 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	if (tcph == NULL)
 		return false;
 
-	return handle_packet4(iph, tcph, psdinfo);
+	hash = hashfunc(iph->saddr);
+
+	spin_lock(&state.lock);
+	matched = handle_packet4(iph, tcph, psdinfo, hash);
+	spin_unlock(&state.lock);
+	return matched;
 }
 
 static int psd_mt_check(const struct xt_mtchk_param *par)
