@@ -137,15 +137,25 @@ static uint16_t get_port_weight(const struct xt_psd_info *psd, __be16 port)
 
 static bool
 is_portscan(struct host *host, const struct xt_psd_info *psdinfo,
-            uint8_t proto, __be16 dest_port)
+            const struct tcphdr *tcph, uint8_t proto)
 {
+	if (port_in_list(host, proto, tcph->dest))
+		return false;
+
+	/*
+	 * TCP/ACK and/or TCP/RST to a new port? This could be an
+	 * outgoing connection.
+	 */
+	if (proto == IPPROTO_TCP && (tcph->ack || tcph->rst))
+		return false;
+
 	host->timestamp = jiffies;
 
 	if (host->weight >= psdinfo->weight_threshold) /* already matched */
 		return true;
 
 	/* Update the total weight */
-	host->weight += get_port_weight(psdinfo, dest_port);
+	host->weight += get_port_weight(psdinfo, tcph->dest);
 
 	/* Got enough destination ports to decide that this is a scan? */
 	if (host->weight >= psdinfo->weight_threshold)
@@ -153,7 +163,7 @@ is_portscan(struct host *host, const struct xt_psd_info *psdinfo,
 
 	/* Remember the new port */
 	if (host->count < ARRAY_SIZE(host->ports)) {
-		host->ports[host->count].number = dest_port;
+		host->ports[host->count].number = tcph->dest;
 		host->ports[host->count].proto = proto;
 		host->count++;
 	}
@@ -209,12 +219,10 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 {
 	const struct iphdr *iph;
 	const struct tcphdr *tcph = NULL;
-	const struct udphdr *udph;
 	union {
 		struct tcphdr tcph;
 		struct udphdr udph;
 	} _buf;
-	u_int16_t dest_port;
 	u_int8_t proto;
 	unsigned long now;
 	struct host *curr, *last = NULL, **head;
@@ -243,15 +251,11 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 		       sizeof(_buf.tcph), &_buf.tcph);
 		if (tcph == NULL)
 			return false;
-
-		/* Yep, it's dirty */
-		dest_port = tcph->dest;
 	} else if (proto == IPPROTO_UDP || proto == IPPROTO_UDPLITE) {
-		udph = skb_header_pointer(pskb, match->thoff,
+		tcph = skb_header_pointer(pskb, match->thoff,
 		       sizeof(_buf.udph), &_buf.udph);
-		if (udph == NULL)
+		if (tcph == NULL)
 			return false;
-		dest_port = udph->dest;
 	} else {
 		pr_debug("protocol not supported\n");
 		return false;
@@ -276,13 +280,7 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	if (curr != NULL) {
 		/* We know this address, and the entry isn't too old. Update it. */
 		if (entry_is_recent(curr, psdinfo->delay_threshold, now)) {
-			if (port_in_list(curr, proto, dest_port))
-				goto out_no_match;
-			/* TCP/ACK and/or TCP/RST to a new port? This could be an outgoing connection. */
-			if (proto == IPPROTO_TCP && (tcph->ack || tcph->rst))
-				goto out_no_match;
-
-			if (is_portscan(curr, psdinfo, proto, dest_port))
+			if (is_portscan(curr, psdinfo, tcph, proto))
 				goto out_match;
 			goto out_no_match;
 		}
@@ -327,8 +325,8 @@ xt_psd_match(const struct sk_buff *pskb, struct xt_action_param *match)
 	curr4->saddr = iph->saddr;
 	curr->timestamp = now;
 	curr->count = 1;
-	curr->weight = get_port_weight(psdinfo, dest_port);
-	curr->ports[0].number = dest_port;
+	curr->weight = get_port_weight(psdinfo, tcph->dest);
+	curr->ports[0].number = tcph->dest;
 	curr->ports[0].proto = proto;
 
 out_no_match:
