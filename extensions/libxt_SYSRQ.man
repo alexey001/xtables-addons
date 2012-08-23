@@ -62,7 +62,7 @@ password="password"
 seqno="$(date +%s)"
 salt="$(dd bs=12 count=1 if=/dev/urandom 2>/dev/null |
     openssl enc \-base64)"
-ipaddr=10.10.25.7
+ipaddr="2001:0db8:0000:0000:0000:ff00:0042:8329"
 req="$sysrq_key,$seqno,$salt"
 req="$req,$(echo \-n "$req,$ipaddr,$password" | sha1sum | cut \-c1\-40)"
 
@@ -75,8 +75,8 @@ sysrq key can be used at once, but bear in mind that, for example, a sync may
 not complete before a subsequent reboot or poweroff.
 .PP
 An IPv4 address should have no leading zeros, an IPv6 address should
-be in the form recommended by RFC 5952.  The debug option will log the
-correct form of the address.
+be in the full expanded form (as shown above). The debug option will cause
+output to be emitted in the same form.
 .PP
 The hashing scheme should be enough to prevent mis-use of SYSRQ in many
 environments, but it is not perfect: take reasonable precautions to
