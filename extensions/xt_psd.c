@@ -138,15 +138,17 @@ static bool state6_alloc_mem(void)
 	if (state6.hash != NULL)
 		return true;
 
-	state6.list = vzalloc(LIST_SIZE * sizeof(struct host6));
+	state6.list = vmalloc(LIST_SIZE * sizeof(struct host6));
 	if (state6.list == NULL)
 		return false;
+	memset(state6.list, 0, LIST_SIZE * sizeof(struct host6));
 
-	state6.hash = vzalloc(HASH_SIZE * sizeof(struct host*));
+	state6.hash = vmalloc(HASH_SIZE * sizeof(struct host*));
 	if (state6.hash == NULL) {
 		vfree(state6.list);
 		return false;
 	}
+	memset(state6.hash, 0, HASH_SIZE * sizeof(struct host *));
 	return true;
 }
 #endif
