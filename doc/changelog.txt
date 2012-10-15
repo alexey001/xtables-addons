@@ -3,6 +3,14 @@ HEAD
 ====
 
 
+v1.47 (2010-10-15)
+==================
+Enhancements:
+- xt_psd gained IPv6 support
+Notes for this release:
+- Linux 3.7+ is expressly unsupported by this release.
+
+
 v1.46 (2012-08-23)
 ==================
 Fixes:
