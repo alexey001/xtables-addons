@@ -11,56 +11,6 @@ struct net_device;
 struct rtable;
 struct sk_buff;
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-enum {
-	NFPROTO_UNSPEC =  0,
-	NFPROTO_IPV4   =  2,
-	NFPROTO_ARP    =  3,
-	NFPROTO_BRIDGE =  7,
-	NFPROTO_IPV6   = 10,
-	NFPROTO_DECNET = 12,
-	NFPROTO_NUMPROTO,
-};
-
-struct xt_mtchk_param {
-	const char *table;
-	const void *entryinfo;
-	const struct xt_match *match;
-	void *matchinfo;
-	unsigned int hook_mask;
-	u_int8_t family;
-};
-
-struct xt_mtdtor_param {
-	const struct xt_match *match;
-	void *matchinfo;
-	u_int8_t family;
-};
-
-struct xt_target_param {
-	const struct net_device *in, *out;
-	unsigned int hooknum;
-	const struct xt_target *target;
-	const void *targinfo;
-	u_int8_t family;
-};
-
-struct xt_tgchk_param {
-	const char *table;
-	const void *entryinfo;
-	const struct xt_target *target;
-	void *targinfo;
-	unsigned int hook_mask;
-	u_int8_t family;
-};
-
-struct xt_tgdtor_param {
-	const struct xt_target *target;
-	void *targinfo;
-	u_int8_t family;
-};
-#endif
-
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 struct xt_action_param {
 	union {

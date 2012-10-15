@@ -56,10 +56,7 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 	bool ret;
 	bool hotdrop = false;
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-	ret = xm_tcp->match(skb, par->in, par->out, xm_tcp, &tcp_params,
-	                    fragoff, thoff, &hotdrop);
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 	{
 		struct xt_match_param local_par = {
 			.in        = par->in,
@@ -90,9 +87,7 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 		return;
 
 	destiny = (info->variant == XTCHAOS_TARPIT) ? xt_tarpit : xt_delude;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-	destiny->target(skb, par->in, par->out, par->hooknum, destiny, NULL);
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 	{
 		struct xt_target_param local_par = {
 			.in       = par->in,
@@ -134,10 +129,7 @@ chaos_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 	const struct iphdr *iph = ip_hdr(skb);
 
 	if ((unsigned int)net_random() <= reject_percentage) {
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-		return xt_reject->target(skb, par->in, par->out, par->hooknum,
-		       xt_reject, &reject_params);
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 		struct xt_target_param local_par = {
 			.in       = par->in,
 			.out      = par->out,

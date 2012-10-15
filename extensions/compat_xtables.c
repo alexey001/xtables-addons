@@ -30,31 +30,6 @@
 #	define WITH_IPV6 1
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-static bool xtnu_match_run(const struct sk_buff *skb,
-    const struct net_device *in, const struct net_device *out,
-    const struct xt_match *cm, const void *matchinfo, int offset,
-    unsigned int protoff, bool *hotdrop)
-{
-	struct xtnu_match *nm = xtcompat_numatch(cm);
-	bool lo_ret;
-	struct xt_action_param local_par;
-	local_par.in        = in;
-	local_par.out       = out;
-	local_par.match     = cm;
-	local_par.matchinfo = matchinfo;
-	local_par.fragoff   = offset;
-	local_par.thoff     = protoff;
-	local_par.hotdrop   = false;
-	local_par.family    = NFPROTO_UNSPEC; /* don't have that info */
-
-	if (nm == NULL || nm->match == NULL)
-		return false;
-	lo_ret = nm->match(skb, &local_par);
-	*hotdrop = local_par.hotdrop;
-	return lo_ret;
-}
-#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28) && \
     LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 static bool xtnu_match_run(const struct sk_buff *skb,
@@ -81,27 +56,6 @@ static bool xtnu_match_run(const struct sk_buff *skb,
 }
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-static bool xtnu_match_check(const char *table, const void *entry,
-    const struct xt_match *cm, void *matchinfo, unsigned int hook_mask)
-{
-	struct xtnu_match *nm = xtcompat_numatch(cm);
-	struct xt_mtchk_param local_par = {
-		.table     = table,
-		.entryinfo = entry,
-		.match     = cm,
-		.matchinfo = matchinfo,
-		.hook_mask = hook_mask,
-		.family    = NFPROTO_UNSPEC,
-	};
-
-	if (nm == NULL)
-		return false;
-	if (nm->checkentry == NULL)
-		return true;
-	return nm->checkentry(&local_par) == 0;
-}
-#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28) && \
     LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 static bool xtnu_match_check(const struct xt_mtchk_param *par)
@@ -113,23 +67,6 @@ static bool xtnu_match_check(const struct xt_mtchk_param *par)
 	if (nm->checkentry == NULL)
 		return true;
 	return nm->checkentry(par) == 0;
-}
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-static void xtnu_match_destroy(const struct xt_match *cm, void *matchinfo)
-#endif
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-{
-	struct xtnu_match *nm = xtcompat_numatch(cm);
-	struct xt_mtdtor_param local_par = {
-		.match     = cm,
-		.matchinfo = matchinfo,
-		.family    = NFPROTO_UNSPEC,
-	};
-
-	if (nm != NULL && nm->destroy != NULL)
-		nm->destroy(&local_par);
 }
 #endif
 
@@ -155,11 +92,7 @@ int xtnu_register_match(struct xtnu_match *nt)
 	ct->table      = (char *)nt->table;
 	ct->hooks      = nt->hooks;
 	ct->proto      = nt->proto;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-	ct->match      = xtnu_match_run;
-	ct->checkentry = xtnu_match_check;
-	ct->destroy    = xtnu_match_destroy;
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 	ct->match      = xtnu_match_run;
 	ct->checkentry = xtnu_match_check;
 	ct->destroy    = nt->destroy;
@@ -213,26 +146,6 @@ void xtnu_unregister_matches(struct xtnu_match *nt, unsigned int num)
 EXPORT_SYMBOL_GPL(xtnu_unregister_matches);
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-static unsigned int xtnu_target_run(struct sk_buff *skb,
-    const struct net_device *in, const struct net_device *out,
-    unsigned int hooknum, const struct xt_target *ct, const void *targinfo)
-{
-	struct xtnu_target *nt = xtcompat_nutarget(ct);
-	struct xt_action_param local_par;
-
-	local_par.in       = in;
-	local_par.out      = out;
-	local_par.hooknum  = hooknum;
-	local_par.target   = ct;
-	local_par.targinfo = targinfo;
-	local_par.family   = NFPROTO_UNSPEC;
-
-	if (nt != NULL && nt->target != NULL)
-		return nt->target(&skb, &local_par);
-	return XT_CONTINUE;
-}
-#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28) && \
     LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 static unsigned int
@@ -261,29 +174,6 @@ xtnu_target_run(struct sk_buff *skb, const struct xt_action_param *par)
 }
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-static bool xtnu_target_check(const char *table, const void *entry,
-    const struct xt_target *ct, void *targinfo, unsigned int hook_mask)
-{
-	struct xtnu_target *nt = xtcompat_nutarget(ct);
-	struct xt_tgchk_param local_par = {
-		.table     = table,
-		.entryinfo = entry,
-		.target    = ct,
-		.targinfo  = targinfo,
-		.hook_mask = hook_mask,
-		.family    = NFPROTO_UNSPEC,
-	};
-
-	if (nt == NULL)
-		return false;
-	if (nt->checkentry == NULL)
-		/* this is valid, just like if there was no function */
-		return true;
-	return nt->checkentry(&local_par) == 0;
-}
-#endif
-
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28) && \
     LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 static bool xtnu_target_check(const struct xt_tgchk_param *par)
@@ -295,21 +185,6 @@ static bool xtnu_target_check(const struct xt_tgchk_param *par)
 	if (nt->checkentry == NULL)
 		return true;
 	return nt->checkentry(par) == 0;
-}
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-static void xtnu_target_destroy(const struct xt_target *ct, void *targinfo)
-{
-	struct xtnu_target *nt = xtcompat_nutarget(ct);
-	struct xt_tgdtor_param local_par = {
-		.target   = ct,
-		.targinfo = targinfo,
-		.family   = NFPROTO_UNSPEC,
-	};
-
-	if (nt != NULL && nt->destroy != NULL)
-		nt->destroy(&local_par);
 }
 #endif
 
@@ -335,10 +210,7 @@ int xtnu_register_target(struct xtnu_target *nt)
 	ct->hooks      = nt->hooks;
 	ct->proto      = nt->proto;
 	ct->target     = xtnu_target_run;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-	ct->checkentry = xtnu_target_check;
-	ct->destroy    = xtnu_target_destroy;
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 	ct->checkentry = xtnu_target_check;
 	ct->destroy    = nt->destroy;
 #else
