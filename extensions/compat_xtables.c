@@ -533,39 +533,6 @@ void xtnu_proto_csum_replace4(__sum16 *sum, struct sk_buff *skb,
 EXPORT_SYMBOL_GPL(xtnu_proto_csum_replace4);
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
-int xtnu_neigh_hh_output(struct hh_cache *hh, struct sk_buff *skb)
-{
-	unsigned int hh_alen;
-
-	read_lock_bh(&hh->hh_lock);
-	hh_alen = HH_DATA_ALIGN(hh->hh_len);
-	memcpy(skb->data - hh_alen, hh->hh_data, hh_alen);
-	read_unlock_bh(&hh->hh_lock);
-	skb_push(skb, hh->hh_len);
-	return hh->hh_output(skb);
-}
-EXPORT_SYMBOL_GPL(xtnu_neigh_hh_output);
-
-static inline __wsum xtnu_csum_unfold(__sum16 n)
-{
-	return (__force __wsum)n;
-}
-
-void xtnu_csum_replace4(__sum16 *sum, __be32 from, __be32 to)
-{
-	__be32 diff[] = {~from, to};
-	*sum = csum_fold(csum_partial((char *)diff, sizeof(diff),
-	       ~xtnu_csum_unfold(*sum)));
-}
-
-void xtnu_csum_replace2(__sum16 *sum, __be16 from, __be16 to)
-{
-	xtnu_csum_replace4(sum, (__force __be32)from, (__force __be32)to);
-}
-EXPORT_SYMBOL_GPL(xtnu_csum_replace2);
-#endif
-
 void *HX_memmem(const void *space, size_t spacesize,
     const void *point, size_t pointsize)
 {

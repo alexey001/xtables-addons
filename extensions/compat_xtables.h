@@ -8,8 +8,8 @@
 
 #define DEBUGP Use__pr_debug__instead
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-#	warning Kernels below 2.6.19 not supported.
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
+#	warning Kernels below 2.6.20 not supported.
 #endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
@@ -27,12 +27,6 @@
 #	define nf_conntrack_untracked ip_conntrack_untracked
 #else
 #	warning You need either CONFIG_NF_CONNTRACK or CONFIG_IP_NF_CONNTRACK.
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
-#	define neigh_hh_output xtnu_neigh_hh_output
-#	define IPPROTO_UDPLITE 136
-#	define CSUM_MANGLED_0 ((__force __sum16)0xffff)
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
@@ -63,11 +57,7 @@
 #	define xt_unregister_matches xtnu_unregister_matches
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
-#	define csum_replace2 xtnu_csum_replace2
-#	define csum_replace4 xtnu_csum_replace4
-#	define inet_proto_csum_replace4 xtnu_proto_csum_replace4
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
 #	define csum_replace2 nf_csum_replace2
 #	define csum_replace4 nf_csum_replace4
 #	define inet_proto_csum_replace4 xtnu_proto_csum_replace4

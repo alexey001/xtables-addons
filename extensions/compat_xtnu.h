@@ -5,13 +5,7 @@
 #include <linux/netfilter/x_tables.h>
 #include <linux/spinlock.h>
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
-typedef __u16 __bitwise __sum16;
-typedef __u32 __bitwise __wsum;
-#endif
-
 struct flowi;
-struct hh_cache;
 struct module;
 struct net_device;
 struct rtable;
@@ -131,13 +125,6 @@ static inline struct xtnu_target *xtcompat_nutarget(const struct xt_target *t)
 	return q;
 }
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
-static inline __wsum csum_unfold(__sum16 n)
-{
-	return (__force __wsum)n;
-}
-#endif
-
 extern int xtnu_ip_local_out(struct sk_buff *);
 extern int xtnu_ip_route_me_harder(struct sk_buff **, unsigned int);
 extern int xtnu_skb_make_writable(struct sk_buff **, unsigned int);
@@ -152,9 +139,6 @@ extern int xtnu_register_targets(struct xtnu_target *, unsigned int);
 extern void xtnu_unregister_targets(struct xtnu_target *, unsigned int);
 extern struct xt_match *xtnu_request_find_match(unsigned int,
 	const char *, uint8_t);
-extern int xtnu_neigh_hh_output(struct hh_cache *, struct sk_buff *);
-extern void xtnu_csum_replace2(__u16 __bitwise *, __be16, __be16);
-extern void xtnu_csum_replace4(__u16 __bitwise *, __be32, __be32);
 extern void xtnu_proto_csum_replace4(__u16 __bitwise *, struct sk_buff *,
 	__be32, __be32, bool);
 extern int xtnu_ipv6_skip_exthdr(const struct sk_buff *, int,
