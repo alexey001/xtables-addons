@@ -5,10 +5,6 @@
 #include <linux/netfilter/x_tables.h>
 #include <linux/spinlock.h>
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
-typedef _Bool bool;
-enum { false = 0, true = 1, };
-#endif
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)
 typedef __u16 __bitwise __sum16;
 typedef __u32 __bitwise __wsum;

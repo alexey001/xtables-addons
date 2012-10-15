@@ -50,11 +50,7 @@ static unsigned int rawpost6_hook_fn(unsigned int hook, sk_buff_t *skb,
     const struct net_device *in, const struct net_device *out,
     int (*okfn)(struct sk_buff *))
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 	return ip6t_do_table(skb, hook, in, out, rawpost6_ptable);
-#else
-	return ip6t_do_table(skb, hook, in, out, rawpost6_ptable, NULL);
-#endif
 }
 
 static struct nf_hook_ops rawpost6_hook_ops __read_mostly = {

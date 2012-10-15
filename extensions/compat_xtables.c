@@ -88,11 +88,7 @@ static bool xtnu_match_run(const struct sk_buff *skb,
 }
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
-static int xtnu_match_check(const char *table, const void *entry,
-    const struct xt_match *cm, void *matchinfo, unsigned int matchinfosize,
-    unsigned int hook_mask)
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 static int xtnu_match_check(const char *table, const void *entry,
     const struct xt_match *cm, void *matchinfo, unsigned int hook_mask)
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
@@ -132,10 +128,7 @@ static bool xtnu_match_check(const struct xt_mtchk_param *par)
 }
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
-static void xtnu_match_destroy(const struct xt_match *cm, void *matchinfo,
-    unsigned int matchinfosize)
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 static void xtnu_match_destroy(const struct xt_match *cm, void *matchinfo)
 #endif
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
@@ -232,12 +225,7 @@ void xtnu_unregister_matches(struct xtnu_match *nt, unsigned int num)
 EXPORT_SYMBOL_GPL(xtnu_unregister_matches);
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
-static unsigned int xtnu_target_run(struct sk_buff **pskb,
-    const struct net_device *in, const struct net_device *out,
-    unsigned int hooknum, const struct xt_target *ct, const void *targinfo,
-    void *userdata)
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 static unsigned int xtnu_target_run(struct sk_buff **pskb,
     const struct net_device *in, const struct net_device *out,
     unsigned int hooknum, const struct xt_target *ct, const void *targinfo)
@@ -295,11 +283,7 @@ xtnu_target_run(struct sk_buff *skb, const struct xt_action_param *par)
 }
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
-static int xtnu_target_check(const char *table, const void *entry,
-    const struct xt_target *ct, void *targinfo,
-    unsigned int targinfosize, unsigned int hook_mask)
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
 static int xtnu_target_check(const char *table, const void *entry,
     const struct xt_target *ct, void *targinfo, unsigned int hook_mask)
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
@@ -341,13 +325,8 @@ static bool xtnu_target_check(const struct xt_tgchk_param *par)
 }
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
-static void xtnu_target_destroy(const struct xt_target *ct, void *targinfo,
-    unsigned int targinfosize)
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
-static void xtnu_target_destroy(const struct xt_target *ct, void *targinfo)
-#endif
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+static void xtnu_target_destroy(const struct xt_target *ct, void *targinfo)
 {
 	struct xtnu_target *nt = xtcompat_nutarget(ct);
 	struct xt_tgdtor_param local_par = {
@@ -540,7 +519,6 @@ void xtnu_proto_csum_replace4(__sum16 *sum, struct sk_buff *skb,
 	__be32 diff[] = {~from, to};
 	const void *dv = diff; /* kludge for < v2.6.19-555-g72685fc */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 	if (skb->ip_summed != CHECKSUM_PARTIAL) {
 		*sum = csum_fold(csum_partial(dv, sizeof(diff),
 		       ~csum_unfold(*sum)));
@@ -551,10 +529,6 @@ void xtnu_proto_csum_replace4(__sum16 *sum, struct sk_buff *skb,
 		*sum = ~csum_fold(csum_partial(dv, sizeof(diff),
 		       csum_unfold(*sum)));
 	}
-#else
-	*sum = csum_fold(csum_partial(dv, sizeof(diff),
-	       ~csum_unfold(*sum)));
-#endif
 }
 EXPORT_SYMBOL_GPL(xtnu_proto_csum_replace4);
 #endif

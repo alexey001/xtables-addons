@@ -26,8 +26,7 @@
 #include <net/ip.h>
 #include "compat_xtables.h"
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19) && \
-    (defined(CONFIG_CRYPTO) || defined(CONFIG_CRYPTO_MODULE))
+#if defined(CONFIG_CRYPTO) || defined(CONFIG_CRYPTO_MODULE)
 #	define WITH_CRYPTO 1
 #endif
 #if defined(CONFIG_IP6_NF_IPTABLES) || defined(CONFIG_IP6_NF_IPTABLES_MODULE)
@@ -156,10 +155,8 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 		printk(KERN_INFO KBUILD_MODNAME ": SysRq %c\n", data[i]);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 		handle_sysrq(data[i]);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
-		handle_sysrq(data[i], NULL);
 #else
-		handle_sysrq(data[i], NULL, NULL);
+		handle_sysrq(data[i], NULL);
 #endif
 	}
 	return NF_ACCEPT;
@@ -193,10 +190,8 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 	handle_sysrq(c);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
-	handle_sysrq(c, NULL);
 #else
-	handle_sysrq(c, NULL, NULL);
+	handle_sysrq(c, NULL);
 #endif
 	return NF_ACCEPT;
 }
@@ -364,8 +359,9 @@ static int __init sysrq_crypto_init(void)
  fail:
 	sysrq_crypto_exit();
 	return ret;
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
-	printk(KERN_WARNING "xt_SYSRQ does not provide crypto for < 2.6.19\n");
+#else
+	printk(KERN_WARNING "Kernel was compiled without crypto, "
+	       "so xt_SYSRQ won't use crypto.\n");
 #endif
 	return -EINVAL;
 }

@@ -32,10 +32,6 @@
 #include "xt_pknock.h"
 #include "compat_xtables.h"
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
-#	define PK_CRYPTO 1
-#endif
-
 enum status {
 	ST_INIT = 1,
 	ST_MATCHING,
@@ -113,7 +109,6 @@ static struct proc_dir_entry *pde;
 
 static DEFINE_SPINLOCK(list_lock);
 
-#ifdef PK_CRYPTO
 static struct {
 	const char *algo;
 	struct crypto_hash	*tfm;
@@ -124,7 +119,6 @@ static struct {
 	.tfm	= NULL,
 	.size	= 0
 };
-#endif
 
 module_param(rule_hashsize, int, S_IRUGO);
 MODULE_PARM_DESC(rule_hashsize, "Buckets in rule hash table (default: 8)");
@@ -719,7 +713,6 @@ msg_to_userspace_nl(const struct xt_pknock_mtinfo *info,
 	return true;
 }
 
-#ifdef PK_CRYPTO
 /**
  * Transforms a sequence of characters to hexadecimal.
  *
@@ -818,7 +811,6 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 	kfree(hexresult);
 	return fret;
 }
-#endif /* PK_CRYPTO */
 
 /**
  * If the peer pass the security policy.
@@ -841,13 +833,11 @@ pass_security(struct peer *peer, const struct xt_pknock_mtinfo *info,
 		pk_debug("DENIED (anti-spoof protection)", peer);
 		return false;
 	}
-#ifdef PK_CRYPTO
 	/* Check for OPEN secret */
 	if (has_secret(info->open_secret,
 					info->open_secret_len, peer->ip,
 					payload, payload_len))
 		return true;
-#endif
 
 	return false;
 }
@@ -939,7 +929,6 @@ static bool
 is_close_knock(const struct peer *peer, const struct xt_pknock_mtinfo *info,
 		const unsigned char *payload, unsigned int payload_len)
 {
-#ifdef PK_CRYPTO
 	/* Check for CLOSE secret. */
 	if (has_secret(info->close_secret,
 				info->close_secret_len, peer->ip,
@@ -948,7 +937,6 @@ is_close_knock(const struct peer *peer, const struct xt_pknock_mtinfo *info,
 		pk_debug("BLOCKED", peer);
 		return true;
 	}
-#endif
 	return false;
 }
 
@@ -983,14 +971,8 @@ static bool pknock_mt(const struct sk_buff *skb,
 
 	case IPPROTO_UDP:
 	case IPPROTO_UDPLITE:
-#ifdef PK_CRYPTO
 		hdr_len = (iph->ihl * 4) + sizeof(struct udphdr);
 		break;
-#else
-		pr_debug("UDP protocol not supported\n");
-		return false;
-#endif
-
 	default:
 		pr_debug("IP payload protocol is neither tcp nor udp.\n");
 		return false;
@@ -1079,12 +1061,9 @@ static int pknock_mt_check(const struct xt_mtchk_param *par)
 
 	if (!(info->option & XT_PKNOCK_NAME))
 		RETURN_ERR("You must specify --name option.\n");
-
-#ifndef PK_CRYPTO
 	if (info->option & (XT_PKNOCK_OPENSECRET | XT_PKNOCK_CLOSESECRET))
 		RETURN_ERR("No crypto support available; "
 			"cannot use opensecret/closescret\n");
-#endif
 	if (info->option & XT_PKNOCK_OPENSECRET && info->ports_count != 1)
 		RETURN_ERR("--opensecret must have just one knock port\n");
 	if (info->option & XT_PKNOCK_KNOCKPORT) {
@@ -1154,7 +1133,6 @@ static int __init xt_pknock_mt_init(void)
 
 	if (gc_expir_time < DEFAULT_GC_EXPIRATION_TIME)
 		gc_expir_time = DEFAULT_GC_EXPIRATION_TIME;
-#ifdef PK_CRYPTO
 	if (request_module(crypto.algo) < 0) {
 		printk(KERN_ERR PKNOCK "request_module('%s') error.\n",
                         crypto.algo);
@@ -1171,9 +1149,6 @@ static int __init xt_pknock_mt_init(void)
 	crypto.size = crypto_hash_digestsize(crypto.tfm);
 	crypto.desc.tfm = crypto.tfm;
 	crypto.desc.flags = 0;
-#else
-	pr_info("No crypto support for < 2.6.19\n");
-#endif
 
 	pde = proc_mkdir("xt_pknock", init_net__proc_net);
 	if (pde == NULL) {
@@ -1188,11 +1163,8 @@ static void __exit xt_pknock_mt_exit(void)
 	remove_proc_entry("xt_pknock", init_net__proc_net);
 	xt_unregister_match(&xt_pknock_mt_reg);
 	kfree(rule_hashtable);
-
-#ifdef PK_CRYPTO
 	if (crypto.tfm != NULL)
 		crypto_free_hash(crypto.tfm);
-#endif
 }
 
 module_init(xt_pknock_mt_init);

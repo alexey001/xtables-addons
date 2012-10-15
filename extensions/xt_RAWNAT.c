@@ -96,9 +96,7 @@ static void rawnat4_update_l4(struct sk_buff *skb, __be32 oldip, __be32 newip)
 	case IPPROTO_UDPLITE:
 		udph = transport_hdr;
 		cond = udph->check != 0;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 		cond |= skb->ip_summed == CHECKSUM_PARTIAL;
-#endif
 		if (cond) {
 			inet_proto_csum_replace4(&udph->check, skb,
 				oldip, newip, true);
@@ -225,9 +223,7 @@ static void rawnat6_update_l4(struct sk_buff *skb, unsigned int l4proto,
 	case IPPROTO_UDPLITE:
 		udph = (void *)iph + l4offset;
 		cond = udph->check;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 		cond |= skb->ip_summed == CHECKSUM_PARTIAL;
-#endif
 		if (cond) {
 			for (i = 0; i < 4; ++i)
 				inet_proto_csum_replace4(&udph->check, skb,
