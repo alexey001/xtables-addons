@@ -30,18 +30,11 @@
 #	define WITH_IPV6 1
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
-static int xtnu_match_run(const struct sk_buff *skb,
-    const struct net_device *in, const struct net_device *out,
-    const struct xt_match *cm, const void *matchinfo, int offset,
-    unsigned int protoff, int *hotdrop)
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 static bool xtnu_match_run(const struct sk_buff *skb,
     const struct net_device *in, const struct net_device *out,
     const struct xt_match *cm, const void *matchinfo, int offset,
     unsigned int protoff, bool *hotdrop)
-#endif
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 {
 	struct xtnu_match *nm = xtcompat_numatch(cm);
 	bool lo_ret;
@@ -88,14 +81,9 @@ static bool xtnu_match_run(const struct sk_buff *skb,
 }
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
-static int xtnu_match_check(const char *table, const void *entry,
-    const struct xt_match *cm, void *matchinfo, unsigned int hook_mask)
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 static bool xtnu_match_check(const char *table, const void *entry,
     const struct xt_match *cm, void *matchinfo, unsigned int hook_mask)
-#endif
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 {
 	struct xtnu_match *nm = xtcompat_numatch(cm);
 	struct xt_mtchk_param local_par = {
@@ -283,14 +271,9 @@ xtnu_target_run(struct sk_buff *skb, const struct xt_action_param *par)
 }
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
-static int xtnu_target_check(const char *table, const void *entry,
-    const struct xt_target *ct, void *targinfo, unsigned int hook_mask)
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 static bool xtnu_target_check(const char *table, const void *entry,
     const struct xt_target *ct, void *targinfo, unsigned int hook_mask)
-#endif
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 {
 	struct xtnu_target *nt = xtcompat_nutarget(ct);
 	struct xt_tgchk_param local_par = {

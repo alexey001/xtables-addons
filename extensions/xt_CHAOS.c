@@ -54,11 +54,7 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 	const int fragoff       = ntohs(iph->frag_off) & IP_OFFSET;
 	typeof(xt_tarpit) destiny;
 	bool ret;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 22)
-	int hotdrop = false;
-#else
 	bool hotdrop = false;
-#endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 	ret = xm_tcp->match(skb, par->in, par->out, xm_tcp, &tcp_params,

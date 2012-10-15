@@ -8,8 +8,8 @@
 
 #define DEBUGP Use__pr_debug__instead
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 22)
-#	warning Kernels below 2.6.22 not supported.
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
+#	warning Kernels below 2.6.23 not supported.
 #endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
@@ -17,16 +17,8 @@
 #		warning You have CONFIG_NF_CONNTRACK enabled, but CONFIG_NF_CONNTRACK_MARK is not (please enable).
 #	endif
 #	include <net/netfilter/nf_conntrack.h>
-#elif defined(CONFIG_IP_NF_CONNTRACK) || defined(CONFIG_IP_NF_CONNTRACK_MODULE)
-#	if !defined(CONFIG_IP_NF_CONNTRACK_MARK)
-#		warning You have CONFIG_IP_NF_CONNTRACK enabled, but CONFIG_IP_NF_CONNTRACK_MARK is not (please enable).
-#	endif
-#	include <linux/netfilter_ipv4/ip_conntrack.h>
-#	define nf_conn ip_conntrack
-#	define nf_ct_get ip_conntrack_get
-#	define nf_conntrack_untracked ip_conntrack_untracked
 #else
-#	warning You need either CONFIG_NF_CONNTRACK or CONFIG_IP_NF_CONNTRACK.
+#	warning You need CONFIG_NF_CONNTRACK.
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
