@@ -2,7 +2,7 @@
 HEAD
 ====
 Changes:
-- remove support for Linux 2.6.17--2.6.32
+- remove support for Linux 2.6.17--2.6.33
 
 
 v1.47.1 (2010-10-15)

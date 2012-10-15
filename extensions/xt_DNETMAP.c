@@ -28,10 +28,8 @@
 #include <linux/netfilter/x_tables.h>
 #include <linux/version.h>
 #include <net/netfilter/nf_nat_rule.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
 #include <net/net_namespace.h>
 #include <net/netns/generic.h>
-#endif
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 3, 0)
 #	include <net/netfilter/nf_nat.h>
 #else
@@ -109,16 +107,11 @@ struct dnetmap_net {
 	struct list_head *dnetmap_iphash;
 };
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
 static int dnetmap_net_id;
 static inline struct dnetmap_net *dnetmap_pernet(struct net *net)
 {
 	return net_generic(net, dnetmap_net_id);
 }
-#else
-struct dnetmap_net *dnetmap;
-#define dnetmap_pernet(x) dnetmap
-#endif
 
 static DEFINE_SPINLOCK(dnetmap_lock);
 static DEFINE_MUTEX(dnetmap_mutex);
@@ -871,13 +864,6 @@ static int __net_init dnetmap_net_init(struct net *net)
 	struct dnetmap_net *dnetmap_net = dnetmap_pernet(net);
 	int i;
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
-	dnetmap = kmalloc(sizeof(struct dnetmap_net),GFP_ATOMIC);
-	if (dnetmap == NULL)
-		return -ENOMEM;
-	dnetmap_net = dnetmap;
-#endif
-
 	dnetmap_net->dnetmap_iphash = kmalloc(sizeof(struct list_head) *
 					      hash_size * 2, GFP_ATOMIC);
 	if (dnetmap_net->dnetmap_iphash == NULL)
@@ -906,20 +892,15 @@ static void __net_exit dnetmap_net_exit(struct net *net)
 	mutex_unlock(&dnetmap_mutex);
 
 	kfree(dnetmap_net->dnetmap_iphash);
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
 	kfree(dnetmap_net);
-#endif
-
 	dnetmap_proc_net_exit(net);
 }
 
 static struct pernet_operations dnetmap_net_ops = {
 	.init = dnetmap_net_init,
 	.exit = dnetmap_net_exit,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
 	.id   = &dnetmap_net_id,
 	.size = sizeof(struct dnetmap_net),
-#endif
 };
 
 static struct xt_target dnetmap_tg_reg __read_mostly = {

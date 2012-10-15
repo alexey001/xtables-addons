@@ -8,8 +8,8 @@
 
 #define DEBUGP Use__pr_debug__instead
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-#	warning Kernels below 2.6.33 not supported.
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
+#	warning Kernels below 2.6.34 not supported.
 #endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
@@ -29,13 +29,8 @@
 #	define xt_unregister_matches xtnu_unregister_matches
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
-#	define ipt_unregister_table(tbl) ipt_unregister_table(&init_net, (tbl))
-#	define ip6t_unregister_table(tbl) ip6t_unregister_table(&init_net, (tbl))
-#else
-#	define ipt_unregister_table(tbl) ipt_unregister_table(tbl)
-#	define ip6t_unregister_table(tbl) ip6t_unregister_table(tbl)
-#endif
+#define ipt_unregister_table(tbl) ipt_unregister_table(&init_net, (tbl))
+#define ip6t_unregister_table(tbl) ip6t_unregister_table(&init_net, (tbl))
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 #	define rt_dst(rt)	(&(rt)->dst)
