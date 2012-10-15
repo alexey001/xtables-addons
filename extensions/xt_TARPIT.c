@@ -208,13 +208,9 @@ static void tarpit_tcp4(struct sk_buff *oldskb, unsigned int hook,
 	nf_reset(nskb);
 	skb_nfmark(nskb) = 0;
 	skb_init_secmark(nskb);
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18)
 	skb_shinfo(nskb)->gso_size = 0;
 	skb_shinfo(nskb)->gso_segs = 0;
 	skb_shinfo(nskb)->gso_type = 0;
-#endif
-
 	oldhdr = ip_hdr(oldskb);
 	tcph = (struct tcphdr *)(skb_network_header(nskb) + ip_hdrlen(nskb));
 
@@ -359,13 +355,9 @@ static void tarpit_tcp6(struct sk_buff *oldskb, unsigned int hook,
 	nf_reset(nskb);
 	skb_nfmark(nskb) = 0;
 	skb_init_secmark(nskb);
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18)
 	skb_shinfo(nskb)->gso_size = 0;
 	skb_shinfo(nskb)->gso_segs = 0;
 	skb_shinfo(nskb)->gso_type = 0;
-#endif
-
 	skb_put(nskb, sizeof(struct ipv6hdr));
 	ip6h = ipv6_hdr(nskb);
 	*(__be32 *)ip6h =  htonl(0x60000000 | (tclass << 20));

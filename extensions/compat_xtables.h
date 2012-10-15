@@ -8,8 +8,8 @@
 
 #define DEBUGP Use__pr_debug__instead
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 17)
-#	warning Kernels below 2.6.17 not supported.
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18)
+#	warning Kernels below 2.6.18 not supported.
 #endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
@@ -27,11 +27,6 @@
 #	define nf_conntrack_untracked ip_conntrack_untracked
 #else
 #	warning You need either CONFIG_NF_CONNTRACK or CONFIG_IP_NF_CONNTRACK.
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 17)
-#	define skb_init_secmark(skb)
-#	define skb_linearize	xtnu_skb_linearize
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 19)

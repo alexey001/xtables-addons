@@ -463,10 +463,7 @@ EXPORT_SYMBOL_GPL(xtnu_request_find_match);
 
 int xtnu_ip_route_me_harder(struct sk_buff **pskb, unsigned int addr_type)
 {
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 17)
-	/* Actually this one is valid up to 2.6.18.4, but changed in 2.6.18.5 */
-	return ip_route_me_harder(pskb);
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
 	return ip_route_me_harder(pskb, addr_type);
 #else
 	return ip_route_me_harder(*pskb, addr_type);
@@ -593,14 +590,6 @@ void xtnu_csum_replace2(__sum16 *sum, __be16 from, __be16 to)
 	xtnu_csum_replace4(sum, (__force __be32)from, (__force __be32)to);
 }
 EXPORT_SYMBOL_GPL(xtnu_csum_replace2);
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 17)
-int xtnu_skb_linearize(struct sk_buff *skb)
-{
-	return skb_linearize(skb, GFP_ATOMIC);
-}
-EXPORT_SYMBOL_GPL(xtnu_skb_linearize);
 #endif
 
 void *HX_memmem(const void *space, size_t spacesize,
