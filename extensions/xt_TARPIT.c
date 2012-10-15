@@ -237,15 +237,9 @@ static void tarpit_tcp4(struct sk_buff *oldskb, unsigned int hook,
 
 	/* Adjust TCP checksum */
 	tcph->check = 0;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 20)
-	tcph->check = tcp_v4_check(tcph, sizeof(struct tcphdr), niph->saddr,
-	              niph->daddr, csum_partial((char *)tcph,
-	              sizeof(struct tcphdr), 0));
-#else
 	tcph->check = tcp_v4_check(sizeof(struct tcphdr), niph->saddr,
 	              niph->daddr, csum_partial((char *)tcph,
 	              sizeof(struct tcphdr), 0));
-#endif
 
 	/* Set DF, id = 0 */
 	niph->frag_off = htons(IP_DF);

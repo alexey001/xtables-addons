@@ -62,26 +62,4 @@ typedef struct sk_buff *sk_buff_t;
 
 #endif /* 2.6.21 */
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 20)
-#	include <linux/netfilter_ipv6/ip6_tables.h>
-/* Standard entry */
-struct ip6t_standard
-{
-	struct ip6t_entry entry;
-	struct ip6t_standard_target target;
-};
-
-struct ip6t_error_target
-{
-	struct ip6t_entry_target target;
-	char errorname[IP6T_FUNCTION_MAXNAMELEN];
-};
-
-struct ip6t_error
-{
-	struct ip6t_entry entry;
-	struct ip6t_error_target target;
-};
-#endif /* 2.6.20 */
-
 #endif /* XTA_COMPAT_RAWPOST_H */
