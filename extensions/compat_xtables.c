@@ -30,7 +30,7 @@
 #	define WITH_IPV6 1
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29) && \
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30) && \
     LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 static bool xtnu_match_run(const struct sk_buff *skb,
     const struct xt_match_param *par)
@@ -56,7 +56,7 @@ static bool xtnu_match_run(const struct sk_buff *skb,
 }
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29) && \
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30) && \
     LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 static bool xtnu_match_check(const struct xt_mtchk_param *par)
 {
@@ -146,7 +146,7 @@ void xtnu_unregister_matches(struct xtnu_match *nt, unsigned int num)
 EXPORT_SYMBOL_GPL(xtnu_unregister_matches);
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29) && \
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30) && \
     LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 static unsigned int
 xtnu_target_run(struct sk_buff *skb, const struct xt_target_param *par)
@@ -174,7 +174,7 @@ xtnu_target_run(struct sk_buff *skb, const struct xt_action_param *par)
 }
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29) && \
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30) && \
     LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 static bool xtnu_target_check(const struct xt_tgchk_param *par)
 {
