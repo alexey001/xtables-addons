@@ -193,11 +193,7 @@ tee_tg_route6(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 	fl.nl_u.ip6_u.flowlabel = ((iph->flow_lbl[0] & 0xF) << 16) |
 		(iph->flow_lbl[1] << 8) | iph->flow_lbl[2];
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 25)
-	dst = ip6_route_output(NULL, &fl);
-#else
 	dst = ip6_route_output(dev_net(skb->dev), NULL, &fl);
-#endif
 	if (dst == NULL)
 		return false;
 
