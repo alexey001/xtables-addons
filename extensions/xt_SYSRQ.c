@@ -119,9 +119,7 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 	ret = crypto_hash_init(&desc);
 	if (ret != 0)
 		goto hash_fail;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 	sg_init_table(sg, 2);
-#endif
 	sg_set_buf(&sg[0], data, n);
 	i = strlen(sysrq_digest_password);
 	sg_set_buf(&sg[1], sysrq_digest_password, i);

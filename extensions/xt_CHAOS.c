@@ -90,9 +90,7 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 		return;
 
 	destiny = (info->variant == XTCHAOS_TARPIT) ? xt_tarpit : xt_delude;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
-	destiny->target(&skb, par->in, par->out, par->hooknum, destiny, NULL);
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 	destiny->target(skb, par->in, par->out, par->hooknum, destiny, NULL);
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 	{
@@ -136,10 +134,7 @@ chaos_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 	const struct iphdr *iph = ip_hdr(skb);
 
 	if ((unsigned int)net_random() <= reject_percentage) {
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
-		return xt_reject->target(pskb, par->in, par->out, par->hooknum,
-		       xt_reject, &reject_params);
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 27)
 		return xt_reject->target(skb, par->in, par->out, par->hooknum,
 		       xt_reject, &reject_params);
 #elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)

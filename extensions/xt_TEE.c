@@ -67,11 +67,7 @@ tee_tg_route4(struct sk_buff *skb, const struct xt_tee_tginfo *info)
 
 static inline bool dev_hh_avail(const struct net_device *dev)
 {
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 23)
-	return dev->hard_header != NULL;
-#else
 	return dev->header_ops != NULL;
-#endif
 }
 
 /*

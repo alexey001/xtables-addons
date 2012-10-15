@@ -211,13 +211,13 @@ static int __init condition_mt_init(void)
 	int ret;
 
 	mutex_init(&proc_lock);
-	proc_net_condition = proc_mkdir(dir_name, init_net__proc_net);
+	proc_net_condition = proc_mkdir(dir_name, init_net.proc_net);
 	if (proc_net_condition == NULL)
 		return -EACCES;
 
 	ret = xt_register_matches(condition_mt_reg, ARRAY_SIZE(condition_mt_reg));
 	if (ret < 0) {
-		remove_proc_entry(dir_name, init_net__proc_net);
+		remove_proc_entry(dir_name, init_net.proc_net);
 		return ret;
 	}
 
@@ -227,7 +227,7 @@ static int __init condition_mt_init(void)
 static void __exit condition_mt_exit(void)
 {
 	xt_unregister_matches(condition_mt_reg, ARRAY_SIZE(condition_mt_reg));
-	remove_proc_entry(dir_name, init_net__proc_net);
+	remove_proc_entry(dir_name, init_net.proc_net);
 }
 
 module_init(condition_mt_init);

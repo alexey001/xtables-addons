@@ -250,20 +250,20 @@ static int __init quota_mt2_init(void)
 {
 	int ret;
 
-	proc_xt_quota = proc_mkdir("xt_quota", init_net__proc_net);
+	proc_xt_quota = proc_mkdir("xt_quota", init_net.proc_net);
 	if (proc_xt_quota == NULL)
 		return -EACCES;
 
 	ret = xt_register_matches(quota_mt2_reg, ARRAY_SIZE(quota_mt2_reg));
 	if (ret < 0)
-		remove_proc_entry("xt_quota", init_net__proc_net);
+		remove_proc_entry("xt_quota", init_net.proc_net);
 	return ret;
 }
 
 static void __exit quota_mt2_exit(void)
 {
 	xt_unregister_matches(quota_mt2_reg, ARRAY_SIZE(quota_mt2_reg));
-	remove_proc_entry("xt_quota", init_net__proc_net);
+	remove_proc_entry("xt_quota", init_net.proc_net);
 }
 
 module_init(quota_mt2_init);

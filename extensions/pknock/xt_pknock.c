@@ -776,9 +776,7 @@ has_secret(const unsigned char *secret, unsigned int secret_len, uint32_t ipsrc,
 
 	epoch_min = get_seconds() / 60;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 	sg_init_table(sg, ARRAY_SIZE(sg));
-#endif
 	sg_set_buf(&sg[0], &ipsrc, sizeof(ipsrc));
 	sg_set_buf(&sg[1], &epoch_min, sizeof(epoch_min));
 
@@ -1150,7 +1148,7 @@ static int __init xt_pknock_mt_init(void)
 	crypto.desc.tfm = crypto.tfm;
 	crypto.desc.flags = 0;
 
-	pde = proc_mkdir("xt_pknock", init_net__proc_net);
+	pde = proc_mkdir("xt_pknock", init_net.proc_net);
 	if (pde == NULL) {
 		printk(KERN_ERR PKNOCK "proc_mkdir() error in _init().\n");
 		return -ENXIO;
@@ -1160,7 +1158,7 @@ static int __init xt_pknock_mt_init(void)
 
 static void __exit xt_pknock_mt_exit(void)
 {
-	remove_proc_entry("xt_pknock", init_net__proc_net);
+	remove_proc_entry("xt_pknock", init_net.proc_net);
 	xt_unregister_match(&xt_pknock_mt_reg);
 	kfree(rule_hashtable);
 	if (crypto.tfm != NULL)

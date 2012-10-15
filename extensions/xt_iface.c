@@ -48,11 +48,7 @@ static const struct net_device *iface_get(const struct xt_iface_mtinfo *info,
 		return par->in;
 	else if (info->flags & XT_IFACE_DEV_OUT)
 		return par->out;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 	return *put = dev_get_by_name(&init_net, info->ifname);
-#else
-	return *put = dev_get_by_name(info->ifname);
-#endif
 }
 
 static bool iface_flagtest(unsigned int devflags, unsigned int flags,
