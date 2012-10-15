@@ -3,8 +3,8 @@ HEAD
 ====
 
 
-v1.47 (2010-10-15)
-==================
+v1.47.1 (2010-10-15)
+====================
 Enhancements:
 - xt_psd gained IPv6 support
 Notes for this release:
