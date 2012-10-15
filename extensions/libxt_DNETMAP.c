@@ -69,19 +69,8 @@ static int netmask2bits(u_int32_t netmask)
 	return bits;
 }
 
-static void DNETMAP_init(struct xt_entry_target *t)
-{
-	struct xt_DNETMAP_tginfo *tginfo = (void *)&t->data;
-	struct nf_nat_ipv4_multi_range_compat *mr = &tginfo->prefix;
-
-	/* Actually, it's 0, but it's ignored at the moment. */
-	mr->rangesize = 1;
-	tginfo->ttl = 0;
-	tginfo->flags = 0;
-}
-
 /* Parses network address */
-static void parse_prefix(char *arg, struct nf_nat_ipv4_range *range)
+static void parse_prefix(char *arg, struct nf_nat_range *range)
 {
 	char *slash;
 	const struct in_addr *ip;
@@ -97,7 +86,7 @@ static void parse_prefix(char *arg, struct nf_nat_ipv4_range *range)
 	if (ip == NULL)
 		xtables_error(PARAMETER_PROBLEM, "Bad IP address \"%s\"\n",
 			      arg);
-	range->min_ip = ip->s_addr;
+	range->min_addr.in = *ip;
 	if (slash) {
 		if (strchr(slash + 1, '.')) {
 			ip = xtables_numeric_to_ipmask(slash + 1);
@@ -123,20 +112,20 @@ static void parse_prefix(char *arg, struct nf_nat_ipv4_range *range)
 	} else
 		netmask = ~0;
 
-	if (range->min_ip & ~netmask) {
+	if (range->min_addr.ip & ~netmask) {
 		if (slash)
 			*slash = '/';
 		xtables_error(PARAMETER_PROBLEM, "Bad network address \"%s\"\n",
 			      arg);
 	}
-	range->max_ip = range->min_ip | ~netmask;
+	range->max_addr.ip = range->min_addr.ip | ~netmask;
 }
 
 static int DNETMAP_parse(int c, char **argv, int invert, unsigned int *flags,
 			 const void *entry, struct xt_entry_target **target)
 {
 	struct xt_DNETMAP_tginfo *tginfo = (void *)(*target)->data;
-	struct nf_nat_ipv4_multi_range_compat *mr = &tginfo->prefix;
+	struct nf_nat_range *mr = &tginfo->prefix;
 	char *end;
 
 	switch (c) {
@@ -147,7 +136,7 @@ static int DNETMAP_parse(int c, char **argv, int invert, unsigned int *flags,
 				  invert);
 
 		/* TO-DO use xtables_ipparse_any instead? */
-		parse_prefix(optarg, &mr->range[0]);
+		parse_prefix(optarg, mr);
 		*flags |= XT_DNETMAP_PREFIX;
 		tginfo->flags |= XT_DNETMAP_PREFIX;
 		return 1;
@@ -192,14 +181,13 @@ static void DNETMAP_print_addr(const void *ip,
 			       int numeric)
 {
 	struct xt_DNETMAP_tginfo *tginfo = (void *)&target->data;
-	const struct nf_nat_ipv4_multi_range_compat *mr = &tginfo->prefix;
-	const struct nf_nat_ipv4_range *r = &mr->range[0];
+	const struct nf_nat_range *r = &tginfo->prefix;
 	struct in_addr a;
 	int bits;
 
-	a.s_addr = r->min_ip;
+	a = r->min_addr.in;
 	printf("%s", xtables_ipaddr_to_numeric(&a));
-	a.s_addr = ~(r->min_ip ^ r->max_ip);
+	a.s_addr = ~(r->min_addr.ip ^ r->max_addr.ip);
 	bits = netmask2bits(a.s_addr);
 	if (bits < 0)
 		printf("/%s", xtables_ipaddr_to_numeric(&a));
@@ -265,7 +253,6 @@ static struct xtables_target dnetmap_tg_reg = {
 	.size          = XT_ALIGN(sizeof(struct xt_DNETMAP_tginfo)),
 	.userspacesize = XT_ALIGN(sizeof(struct xt_DNETMAP_tginfo)),
 	.help          = DNETMAP_help,
-	.init          = DNETMAP_init,
 	.parse         = DNETMAP_parse,
 	.print         = DNETMAP_print,
 	.save          = DNETMAP_save,

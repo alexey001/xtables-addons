@@ -14,7 +14,7 @@ Supported configurations for this release
 
 	* iptables >= 1.4.5
 
-	* kernel-devel >= 3.6
+	* kernel-devel >= 3.7
 	  with prepared build/output directory
 	  - CONFIG_NF_CONNTRACK or CONFIG_IP_NF_CONNTRACK
 	  - CONFIG_NF_CONNTRACK_MARK or CONFIG_IP_NF_CONNTRACK_MARK

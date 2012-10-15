@@ -13,7 +13,7 @@ enum {
 };
 
 struct xt_DNETMAP_tginfo {
-	struct nf_nat_ipv4_multi_range_compat prefix;
+	struct nf_nat_range prefix;
 	__u8 flags;
 	__s32 ttl;
 };
