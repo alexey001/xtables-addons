@@ -68,17 +68,10 @@ static int __init rawpost6_table_init(void)
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 29)
 	rwlock_init(&rawpost6_itable.lock);
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
 	rawpost6_ptable = ip6t_register_table(&init_net, &rawpost6_itable,
 	                  &rawpost6_initial.repl);
 	if (IS_ERR(rawpost6_ptable))
 		return PTR_ERR(rawpost6_ptable);
-#else
-	ret = ip6t_register_table(&rawpost6_itable, &rawpost6_initial.repl);
-	if (ret < 0)
-		return ret;
-	rawpost6_ptable = &rawpost6_itable;
-#endif
 
 	ret = nf_register_hook(&rawpost6_hook_ops);
 	if (ret < 0)

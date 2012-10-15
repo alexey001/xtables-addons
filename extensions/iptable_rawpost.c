@@ -69,17 +69,10 @@ static int __init rawpost4_table_init(void)
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 29)
 	rwlock_init(&rawpost4_itable.lock);
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
 	rawpost4_ptable = ipt_register_table(&init_net, &rawpost4_itable,
 	                  &rawpost4_initial.repl);
 	if (IS_ERR(rawpost4_ptable))
 		return PTR_ERR(rawpost4_ptable);
-#else
-	ret = ipt_register_table(&rawpost4_itable, &rawpost4_initial.repl);
-	if (ret < 0)
-		return ret;
-	rawpost4_ptable = &rawpost4_itable;
-#endif
 
 	ret = nf_register_hook(&rawpost4_hook_ops);
 	if (ret < 0)

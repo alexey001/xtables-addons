@@ -8,8 +8,8 @@
 
 #define DEBUGP Use__pr_debug__instead
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
-#	warning Kernels below 2.6.24 not supported.
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
+#	warning Kernels below 2.6.25 not supported.
 #endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
@@ -21,29 +21,12 @@
 #	warning You need CONFIG_NF_CONNTRACK.
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
-#	define NF_INET_PRE_ROUTING  NF_IP_PRE_ROUTING
-#	define NF_INET_LOCAL_IN     NF_IP_LOCAL_IN
-#	define NF_INET_FORWARD      NF_IP_FORWARD
-#	define NF_INET_LOCAL_OUT    NF_IP_LOCAL_OUT
-#	define NF_INET_POST_ROUTING NF_IP_POST_ROUTING
-#	define ip_local_out         xtnu_ip_local_out
-#	define ip_route_output_key  xtnu_ip_route_output_key
-#	include "compat_nfinetaddr.h"
-#endif
-
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 #	define xt_match              xtnu_match
 #	define xt_register_match     xtnu_register_match
 #	define xt_unregister_match   xtnu_unregister_match
 #	define xt_register_matches   xtnu_register_matches
 #	define xt_unregister_matches xtnu_unregister_matches
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
-#	define csum_replace2 nf_csum_replace2
-#	define csum_replace4 nf_csum_replace4
-#	define inet_proto_csum_replace4 xtnu_proto_csum_replace4
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)

@@ -425,57 +425,6 @@ int xtnu_skb_make_writable(struct sk_buff **pskb, unsigned int len)
 }
 EXPORT_SYMBOL_GPL(xtnu_skb_make_writable);
 
-#if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 24)
-static int __xtnu_ip_local_out(struct sk_buff *skb)
-{
-	struct iphdr *iph = ip_hdr(skb);
-
-	iph->tot_len = htons(skb->len);
-	ip_send_check(iph);
-	return nf_hook(PF_INET, NF_IP_LOCAL_OUT, skb, NULL,
-	               skb->dst->dev, dst_output);
-}
-
-int xtnu_ip_local_out(struct sk_buff *skb)
-{
-	int err;
-
-	err = __xtnu_ip_local_out(skb);
-	if (likely(err == 1))
-		err = dst_output(skb);
-
-	return err;
-}
-EXPORT_SYMBOL_GPL(xtnu_ip_local_out);
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
-int xtnu_ip_route_output_key(void *net, struct rtable **rp, struct flowi *flp)
-{
-	return ip_route_output_flow(rp, flp, NULL, 0);
-}
-EXPORT_SYMBOL_GPL(xtnu_ip_route_output_key);
-
-void xtnu_proto_csum_replace4(__sum16 *sum, struct sk_buff *skb,
-    __be32 from, __be32 to, bool pseudohdr)
-{
-	__be32 diff[] = {~from, to};
-	const void *dv = diff; /* kludge for < v2.6.19-555-g72685fc */
-
-	if (skb->ip_summed != CHECKSUM_PARTIAL) {
-		*sum = csum_fold(csum_partial(dv, sizeof(diff),
-		       ~csum_unfold(*sum)));
-		if (skb->ip_summed == CHECKSUM_COMPLETE && pseudohdr)
-			skb->csum = ~csum_partial(dv, sizeof(diff),
-			            ~skb->csum);
-	} else if (pseudohdr) {
-		*sum = ~csum_fold(csum_partial(dv, sizeof(diff),
-		       csum_unfold(*sum)));
-	}
-}
-EXPORT_SYMBOL_GPL(xtnu_proto_csum_replace4);
-#endif
-
 void *HX_memmem(const void *space, size_t spacesize,
     const void *point, size_t pointsize)
 {
