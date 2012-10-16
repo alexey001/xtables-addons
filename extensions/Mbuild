@@ -13,7 +13,6 @@ obj-${build_RAWNAT}      += libxt_RAWDNAT.so libxt_RAWSNAT.so
 obj-${build_STEAL}       += libxt_STEAL.so
 obj-${build_SYSRQ}       += libxt_SYSRQ.so
 obj-${build_TARPIT}      += libxt_TARPIT.so
-obj-${build_TEE}         += libxt_TEE.so
 obj-${build_condition}   += libxt_condition.so
 obj-${build_fuzzy}       += libxt_fuzzy.so
 obj-${build_geoip}       += libxt_geoip.so

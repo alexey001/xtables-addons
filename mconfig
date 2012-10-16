@@ -13,7 +13,6 @@ build_RAWNAT=m
 build_STEAL=m
 build_SYSRQ=m
 build_TARPIT=m
-build_TEE=
 build_condition=m
 build_fuzzy=m
 build_geoip=m

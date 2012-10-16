@@ -3,6 +3,7 @@ HEAD
 ====
 Changes:
 - remove support for Linux 2.6.17--2.6.34
+- remove xt_TEE (this is available upstream since 2.6.35)
 
 
 v1.47.1 (2010-10-15)
