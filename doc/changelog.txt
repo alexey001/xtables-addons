@@ -2,7 +2,7 @@
 HEAD
 ====
 Changes:
-- remove support for Linux 2.6.17–2.6.36
+- remove support for Linux 2.6.17–2.6.37
 - remove xt_TEE (this is available upstream since 2.6.35)
 - remove xt_CHECKSUM (this is available upstream since 2.6.36)
 
