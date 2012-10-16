@@ -267,11 +267,7 @@ static void tarpit_tcp4(struct sk_buff *oldskb, unsigned int hook,
 	if (mode == XTTARPIT_HONEYPOT)
 		niph->ttl = 128;
 	else
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
 		niph->ttl = ip4_dst_hoplimit(skb_dst(nskb));
-#else
-		niph->ttl = dst_metric(skb_dst(nskb), RTAX_HOPLIMIT);
-#endif
 
 	/* Adjust IP checksum */
 	niph->check = 0;
@@ -363,11 +359,7 @@ static void tarpit_tcp6(struct sk_buff *oldskb, unsigned int hook,
 	if (mode == XTTARPIT_HONEYPOT) {
 		ip6h->hop_limit = 128;
 	} else {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
 		ip6h->hop_limit = ip6_dst_hoplimit(skb_dst(nskb));
-#else
-		ip6h->hop_limit = dst_metric(skb_dst(nskb), RTAX_HOPLIMIT);
-#endif
 	}
 
 	tcph = (struct tcphdr *)(skb_network_header(nskb) +

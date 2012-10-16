@@ -105,11 +105,7 @@ echo_tg6(struct sk_buff **poldskb, const struct xt_action_param *par)
 	}
 
 	skb_dst_set(newskb, dst);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
 	newip->hop_limit = ip6_dst_hoplimit(skb_dst(newskb));
-#else
-	newip->hop_limit = dst_metric(skb_dst(newskb), RTAX_HOPLIMIT);
-#endif
 	newskb->ip_summed = CHECKSUM_NONE;
 
 	/* "Never happens" (?) */
@@ -199,11 +195,7 @@ echo_tg4(struct sk_buff **poldskb, const struct xt_action_param *par)
 	if (ip_route_me_harder(&newskb, RTN_UNSPEC) != 0)
 		goto free_nskb;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
 	newip->ttl = ip4_dst_hoplimit(skb_dst(newskb));
-#else
-	newip->ttl = dst_metric(skb_dst(newskb), RTAX_HOPLIMIT);
-#endif
 	newskb->ip_summed = CHECKSUM_NONE;
 
 	/* "Never happens" (?) */
