@@ -56,20 +56,6 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 	bool ret;
 	bool hotdrop = false;
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
-	{
-		struct xt_match_param local_par = {
-			.in        = par->in,
-			.out       = par->out,
-			.match     = xm_tcp,
-			.matchinfo = &tcp_params,
-			.fragoff   = fragoff,
-			.thoff     = thoff,
-			.hotdrop   = &hotdrop,
-		};
-		ret = xm_tcp->match(skb, &local_par);
-	}
-#else
 	{
 		struct xt_action_param local_par;
 		local_par.in        = par->in,
@@ -82,24 +68,10 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 		ret = xm_tcp->match(skb, &local_par);
 		hotdrop = local_par.hotdrop;
 	}
-#endif
 	if (!ret || hotdrop || (unsigned int)net_random() > delude_percentage)
 		return;
 
 	destiny = (info->variant == XTCHAOS_TARPIT) ? xt_tarpit : xt_delude;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
-	{
-		struct xt_target_param local_par = {
-			.in       = par->in,
-			.out      = par->out,
-			.hooknum  = par->hooknum,
-			.target   = destiny,
-			.targinfo = par->targinfo,
-			.family   = par->family,
-		};
-		destiny->target(skb, &local_par);
-	}
-#else
 	{
 		struct xt_action_param local_par;
 		local_par.in       = par->in;
@@ -110,7 +82,6 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 		local_par.family   = par->family;
 		destiny->target(skb, &local_par);
 	}
-#endif
 }
 
 static unsigned int
@@ -129,16 +100,6 @@ chaos_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 	const struct iphdr *iph = ip_hdr(skb);
 
 	if ((unsigned int)net_random() <= reject_percentage) {
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
-		struct xt_target_param local_par = {
-			.in       = par->in,
-			.out      = par->out,
-			.hooknum  = par->hooknum,
-			.target   = xt_reject,
-			.targinfo = &reject_params,
-		};
-		return xt_reject->target(skb, &local_par);
-#else
 		struct xt_action_param local_par;
 		local_par.in       = par->in;
 		local_par.out      = par->out;
@@ -146,7 +107,6 @@ chaos_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 		local_par.target   = xt_reject;
 		local_par.targinfo = &reject_params;
 		return xt_reject->target(skb, &local_par);
-#endif
 	}
 
 	/* TARPIT/DELUDE may not be called from the OUTPUT chain */

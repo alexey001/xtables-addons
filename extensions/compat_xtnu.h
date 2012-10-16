@@ -11,23 +11,6 @@ struct net_device;
 struct rtable;
 struct sk_buff;
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
-struct xt_action_param {
-	union {
-		const struct xt_match *match;
-		const struct xt_target *target;
-	};
-	union {
-		const void *matchinfo, *targinfo;
-	};
-	const struct net_device *in, *out;
-	int fragoff;
-	unsigned int thoff, hooknum;
-	u_int8_t family;
-	bool hotdrop;
-};
-#endif
-
 struct xtnu_match {
 	/*
 	 * Making it smaller by sizeof(void *) on purpose to catch

@@ -30,138 +30,6 @@
 #	define WITH_IPV6 1
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
-static bool xtnu_match_run(const struct sk_buff *skb,
-    const struct xt_match_param *par)
-{
-	struct xtnu_match *nm = xtcompat_numatch(par->match);
-	struct xt_action_param local_par;
-	bool ret;
-
-	local_par.in        = par->in;
-	local_par.out       = par->out;
-	local_par.match     = par->match;
-	local_par.matchinfo = par->matchinfo;
-	local_par.fragoff   = par->fragoff;
-	local_par.thoff     = par->thoff;
-	local_par.hotdrop   = false;
-	local_par.family    = par->family;
-
-	if (nm == NULL || nm->match == NULL)
-		return false;
-	ret = nm->match(skb, &local_par);
-	*par->hotdrop = local_par.hotdrop;
-	return ret;
-}
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
-static bool xtnu_match_check(const struct xt_mtchk_param *par)
-{
-	struct xtnu_match *nm = xtcompat_numatch(par->match);
-
-	if (nm == NULL)
-		return false;
-	if (nm->checkentry == NULL)
-		return true;
-	return nm->checkentry(par) == 0;
-}
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
-int xtnu_register_match(struct xtnu_match *nt)
-{
-	struct xt_match *ct;
-	char *tmp;
-	int ret;
-
-	ct = kzalloc(sizeof(struct xt_match), GFP_KERNEL);
-	if (ct == NULL)
-		return -ENOMEM;
-
-	tmp = (char *)ct->name;
-	memcpy(tmp, nt->name, sizeof(nt->name));
-	tmp = (char *)(ct->name + sizeof(ct->name) - sizeof(void *));
-	*(tmp-1) = '\0';
-	memcpy(tmp, &nt, sizeof(void *));
-
-	ct->revision   = nt->revision;
-	ct->family     = nt->family;
-	ct->table      = (char *)nt->table;
-	ct->hooks      = nt->hooks;
-	ct->proto      = nt->proto;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
-	ct->match      = xtnu_match_run;
-	ct->checkentry = xtnu_match_check;
-	ct->destroy    = nt->destroy;
-#else
-	ct->match      = nt->match;
-	ct->checkentry = xtnu_match_check;
-	ct->destroy    = nt->destroy;
-#endif
-	ct->matchsize  = nt->matchsize;
-	ct->me         = nt->me;
-
-	nt->__compat_match = ct;
-	ret = xt_register_match(ct);
-	if (ret != 0)
-		kfree(ct);
-	return ret;
-}
-EXPORT_SYMBOL_GPL(xtnu_register_match);
-
-int xtnu_register_matches(struct xtnu_match *nt, unsigned int num)
-{
-	unsigned int i;
-	int ret;
-
-	for (i = 0; i < num; ++i) {
-		ret = xtnu_register_match(&nt[i]);
-		if (ret < 0) {
-			if (i > 0)
-				xtnu_unregister_matches(nt, i);
-			return ret;
-		}
-	}
-	return 0;
-}
-EXPORT_SYMBOL_GPL(xtnu_register_matches);
-
-void xtnu_unregister_match(struct xtnu_match *nt)
-{
-	xt_unregister_match(nt->__compat_match);
-	kfree(nt->__compat_match);
-}
-EXPORT_SYMBOL_GPL(xtnu_unregister_match);
-
-void xtnu_unregister_matches(struct xtnu_match *nt, unsigned int num)
-{
-	unsigned int i;
-
-	for (i = 0; i < num; ++i)
-		xtnu_unregister_match(&nt[i]);
-}
-EXPORT_SYMBOL_GPL(xtnu_unregister_matches);
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
-static unsigned int
-xtnu_target_run(struct sk_buff *skb, const struct xt_target_param *par)
-{
-	struct xtnu_target *nt = xtcompat_nutarget(par->target);
-	struct xt_action_param local_par;
-
-	local_par.in       = par->in;
-	local_par.out      = par->out;
-	local_par.hooknum  = par->hooknum;
-	local_par.target   = par->target;
-	local_par.targinfo = par->targinfo;
-	local_par.family   = par->family;
-
-	return nt->target(&skb, &local_par);
-}
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35)
 static unsigned int
 xtnu_target_run(struct sk_buff *skb, const struct xt_action_param *par)
 {
@@ -169,20 +37,6 @@ xtnu_target_run(struct sk_buff *skb, const struct xt_action_param *par)
 
 	return nt->target(&skb, par);
 }
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
-static bool xtnu_target_check(const struct xt_tgchk_param *par)
-{
-	struct xtnu_target *nt = xtcompat_nutarget(par->target);
-
-	if (nt == NULL)
-		return false;
-	if (nt->checkentry == NULL)
-		return true;
-	return nt->checkentry(par) == 0;
-}
-#endif
 
 int xtnu_register_target(struct xtnu_target *nt)
 {
@@ -206,13 +60,8 @@ int xtnu_register_target(struct xtnu_target *nt)
 	ct->hooks      = nt->hooks;
 	ct->proto      = nt->proto;
 	ct->target     = xtnu_target_run;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
-	ct->checkentry = xtnu_target_check;
-	ct->destroy    = nt->destroy;
-#else
 	ct->checkentry = nt->checkentry;
 	ct->destroy    = nt->destroy;
-#endif
 	ct->targetsize = nt->targetsize;
 	ct->me         = nt->me;
 

@@ -8,8 +8,8 @@
 
 #define DEBUGP Use__pr_debug__instead
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
-#	warning Kernels below 2.6.34 not supported.
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 35)
+#	warning Kernels below 2.6.35 not supported.
 #endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
@@ -19,14 +19,6 @@
 #	include <net/netfilter/nf_conntrack.h>
 #else
 #	warning You need CONFIG_NF_CONNTRACK.
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
-#	define xt_match              xtnu_match
-#	define xt_register_match     xtnu_register_match
-#	define xt_unregister_match   xtnu_unregister_match
-#	define xt_register_matches   xtnu_register_matches
-#	define xt_unregister_matches xtnu_unregister_matches
 #endif
 
 #define ipt_unregister_table(tbl) ipt_unregister_table(&init_net, (tbl))
