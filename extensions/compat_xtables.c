@@ -21,9 +21,7 @@
 #include <net/ip.h>
 #include <net/ipv6.h>
 #include <net/route.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
-#	include <linux/export.h>
-#endif
+#include <linux/export.h>
 #include "compat_skbuff.h"
 #include "compat_xtnu.h"
 #if defined(CONFIG_IP6_NF_IPTABLES) || defined(CONFIG_IP6_NF_IPTABLES_MODULE)
