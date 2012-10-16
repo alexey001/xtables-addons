@@ -8,8 +8,8 @@
 
 #define DEBUGP Use__pr_debug__instead
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 35)
-#	warning Kernels below 2.6.35 not supported.
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
+#	warning Kernels below 2.6.36 not supported.
 #endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
@@ -24,11 +24,7 @@
 #define ipt_unregister_table(tbl) ipt_unregister_table(&init_net, (tbl))
 #define ip6t_unregister_table(tbl) ip6t_unregister_table(&init_net, (tbl))
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
-#	define rt_dst(rt)	(&(rt)->dst)
-#else
-#	define rt_dst(rt)	(&(rt)->u.dst)
-#endif
+#define rt_dst(rt)	(&(rt)->dst)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 3, 0)
 #	define nf_nat_ipv4_multi_range_compat nf_nat_multi_range_compat
