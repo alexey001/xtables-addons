@@ -154,13 +154,4 @@ void *HX_memmem(const void *space, size_t spacesize,
 }
 EXPORT_SYMBOL_GPL(HX_memmem);
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0) && defined(WITH_IPV6)
-int xtnu_ipv6_find_hdr(const struct sk_buff *skb, unsigned int *offset,
-    int target, unsigned short *fragoff, int *fragflg)
-{
-	return ipv6_find_hdr(skb, offset, target, fragoff);
-}
-EXPORT_SYMBOL_GPL(xtnu_ipv6_find_hdr);
-#endif
-
 MODULE_LICENSE("GPL");

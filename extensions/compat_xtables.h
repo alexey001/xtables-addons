@@ -8,8 +8,8 @@
 
 #define DEBUGP Use__pr_debug__instead
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 4, 0)
-#	warning Kernels below 3.4 not supported.
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
+#	warning Kernels below 3.5 not supported.
 #endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
@@ -45,10 +45,6 @@
 		((const unsigned char *)&addr)[2], \
 		((const unsigned char *)&addr)[3]
 #	define NIPQUAD_FMT "%u.%u.%u.%u"
-#endif
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
-#	define ipv6_find_hdr xtnu_ipv6_find_hdr
 #endif
 
 #define ip_route_me_harder    xtnu_ip_route_me_harder
