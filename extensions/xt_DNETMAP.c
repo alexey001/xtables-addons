@@ -30,11 +30,7 @@
 #include <net/netfilter/nf_nat_rule.h>
 #include <net/net_namespace.h>
 #include <net/netns/generic.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 3, 0)
-#	include <net/netfilter/nf_nat.h>
-#else
-#	include <linux/netfilter/nf_nat.h>
-#endif
+#include <linux/netfilter/nf_nat.h>
 #include "compat_xtables.h"
 #include "xt_DNETMAP.h"
 

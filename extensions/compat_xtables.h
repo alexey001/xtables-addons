@@ -8,8 +8,8 @@
 
 #define DEBUGP Use__pr_debug__instead
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
-#	warning Kernels below 3.2 not supported.
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 3, 0)
+#	warning Kernels below 3.3 not supported.
 #endif
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
@@ -25,13 +25,6 @@
 #define ip6t_unregister_table(tbl) ip6t_unregister_table(&init_net, (tbl))
 
 #define rt_dst(rt)	(&(rt)->dst)
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 3, 0)
-#	define nf_nat_ipv4_multi_range_compat nf_nat_multi_range_compat
-#	define nf_nat_ipv4_range nf_nat_range
-#	define NF_NAT_RANGE_MAP_IPS IP_NAT_RANGE_MAP_IPS
-#	define ipv6_skip_exthdr xtnu_ipv6_skip_exthdr
-#endif
 
 #if !defined(NIP6) && !defined(NIP6_FMT)
 #	define NIP6(addr) \
