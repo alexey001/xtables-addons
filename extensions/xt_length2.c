@@ -1,6 +1,6 @@
 /*
  *	xt_length - Xtables module to match packet length
- *	Copyright © Jan Engelhardt <jengelh@medozas.de>, 2007 - 2009
+ *	Copyright © Jan Engelhardt , 2007 - 2009
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License; either
@@ -29,7 +29,7 @@
 #	define NEXTHDR_IPV4 4
 #endif
 
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_DESCRIPTION("Xtables: Packet length (Layer3,4,5) match");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_length2");

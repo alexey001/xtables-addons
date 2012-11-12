@@ -1,6 +1,6 @@
 /*
  *	"DHCPMAC" extensions for Xtables
- *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2008
+ *	Copyright © Jan Engelhardt, 2008
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License; either
@@ -167,7 +167,7 @@ static void __exit dhcpmac_exit(void)
 module_init(dhcpmac_init);
 module_exit(dhcpmac_exit);
 MODULE_DESCRIPTION("Xtables: Clamp DHCP MAC to packet MAC addresses");
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_DHCPMAC");
 MODULE_ALIAS("ipt_dhcpmac");

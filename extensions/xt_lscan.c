@@ -264,7 +264,7 @@ static void __exit lscan_mt_exit(void)
 
 module_init(lscan_mt_init);
 module_exit(lscan_mt_exit);
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_DESCRIPTION("Xtables: Low-level scan (e.g. nmap) match");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_lscan");
