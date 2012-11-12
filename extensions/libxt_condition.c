@@ -2,7 +2,7 @@
  *	"condition" match extension for iptables
  *	Stephane Ouellette <ouellettes [at] videotron ca>, 2002-10-22
  *	Massimiliano Hofer <max [at] nucleus it>, 2006-05-15
- *	Jan Engelhardt <jengelh [at] medozas de>, 2008
+ *	Jan Engelhardt, 2008
  *
  *	This program is free software; you can redistribute it and/or modify it
  *	under the terms of the GNU General Public License; either version 2

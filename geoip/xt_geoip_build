@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 #	Converter for MaxMind CSV database to binary, for xt_geoip
-#	Copyright © Jan Engelhardt <jengelh@medozas.de>, 2008-2011
+#	Copyright © Jan Engelhardt, 2008-2011
 #
 use Getopt::Long;
 use IO::Handle;

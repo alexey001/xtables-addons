@@ -1,6 +1,6 @@
 /*
  *	"DELUDE" target extension for Xtables
- *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2007 - 2008
+ *	Copyright © Jan Engelhardt, 2007 - 2008
  *
  *	Based upon linux-2.6.18.5/net/ipv4/netfilter/ipt_REJECT.c:
  *	(C) 1999-2001 Paul `Rusty' Russell
@@ -177,6 +177,6 @@ static void __exit delude_tg_exit(void)
 module_init(delude_tg_init);
 module_exit(delude_tg_exit);
 MODULE_DESCRIPTION("Xtables: Close TCP connections after handshake");
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_DELUDE");

@@ -1,6 +1,6 @@
 /*
  *	"STEAL" demo target extension for Xtables
- *	written by Jan Engelhardt <jengelh [at] medozas de>, 2008 - 2009
+ *	written by Jan Engelhardt, 2008 - 2009
  *	placed in the Public Domain
  */
 #include <linux/module.h>
@@ -58,7 +58,7 @@ static void __exit steal_tg_exit(void)
 
 module_init(steal_tg_init);
 module_exit(steal_tg_exit);
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_DESCRIPTION("Xtables: Silently DROP packets on output chain");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_STEAL");

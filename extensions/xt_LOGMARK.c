@@ -2,7 +2,7 @@
  *	"LOGMARK" target extension to Xtables
  *	useful for debugging
  *
- *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2008-2010
+ *	Copyright © Jan Engelhardt, 2008-2010
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License; either
@@ -141,7 +141,7 @@ static void __exit logmark_tg_exit(void)
 module_init(logmark_tg_init);
 module_exit(logmark_tg_exit);
 MODULE_DESCRIPTION("Xtables: netfilter mark logging to syslog");
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_LOGMARK");
 MODULE_ALIAS("ip6t_LOGMARK");

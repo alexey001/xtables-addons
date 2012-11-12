@@ -1,7 +1,7 @@
 /*
  *	"quota2" match extension for iptables
  *	Sam Johnston <samj [at] samj net>
- *	Jan Engelhardt <jengelh [at] medozas de>, 2008
+ *	Jan Engelhardt, 2008
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License; either

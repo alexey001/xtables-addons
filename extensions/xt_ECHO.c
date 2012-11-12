@@ -1,7 +1,7 @@
 /*
  *	"ECHO" (RFC 862) target extension for Xtables
  *	Sample module for "Writing your own Netfilter Modules"
- *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2008-2011
+ *	Copyright © Jan Engelhardt, 2008-2011
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License; either
@@ -252,7 +252,7 @@ static void __exit echo_tg_exit(void)
 
 module_init(echo_tg_init);
 module_exit(echo_tg_exit);
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_DESCRIPTION("Xtables: ECHO diagnosis target");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ip6t_ECHO");

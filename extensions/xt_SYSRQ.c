@@ -1,6 +1,6 @@
 /*
  *	"SYSRQ" target extension for Xtables
- *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2008 - 2010
+ *	Copyright © Jan Engelhardt, 2008 - 2010
  *
  *	Based upon the ipt_SYSRQ idea by Marek Zalem <marek [at] terminus sk>
  *
@@ -386,7 +386,7 @@ static void __exit sysrq_tg_exit(void)
 module_init(sysrq_tg_init);
 module_exit(sysrq_tg_exit);
 MODULE_DESCRIPTION("Xtables: triggering SYSRQ remotely");
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_AUTHOR("John Haxby <john.haxby@oracle.com");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_SYSRQ");

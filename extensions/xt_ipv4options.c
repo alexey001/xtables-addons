@@ -76,7 +76,7 @@ static void __exit ipv4options_mt_exit(void)
 }
 
 MODULE_DESCRIPTION("Xatblse: IPv4 option match");
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_ipv4options");
 module_init(ipv4options_mt_init);

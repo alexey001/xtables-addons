@@ -1,7 +1,7 @@
 /*
  * xt_quota2 - enhanced xt_quota that can count upwards and in packets
  * as a minimal accounting match.
- * by Jan Engelhardt <jengelh@medozas.de>, 2008
+ * by Jan Engelhardt , 2008
  *
  * Originally based on xt_quota.c:
  * 	Xtables module to enforce network quotas
@@ -270,7 +270,7 @@ module_init(quota_mt2_init);
 module_exit(quota_mt2_exit);
 MODULE_DESCRIPTION("Xtables: countdown quota match; up counter");
 MODULE_AUTHOR("Sam Johnston <samj@samj.net>");
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_quota2");
 MODULE_ALIAS("ip6t_quota2");

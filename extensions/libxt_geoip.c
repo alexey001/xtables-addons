@@ -2,7 +2,7 @@
  *	"geoip" match extension for iptables
  *	Copyright © Samuel Jean <peejix [at] people netfilter org>, 2004 - 2008
  *	Copyright © Nicolas Bouliane <acidfu [at] people netfilter org>, 2004 - 2008
- *	Jan Engelhardt <jengelh [at] medozas de>, 2008-2011
+ *	Jan Engelhardt, 2008-2011
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License; either

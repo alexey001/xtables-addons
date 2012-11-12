@@ -1,6 +1,6 @@
 /*
  *	rawpost table for ip6_tables
- *	written by Jan Engelhardt <jengelh [at] medozas de>, 2008 - 2009
+ *	written by Jan Engelhardt, 2008 - 2009
  *	placed in the Public Domain
  */
 #include <linux/module.h>
@@ -103,5 +103,5 @@ static void __exit rawpost6_table_exit(void)
 
 module_init(rawpost6_table_init);
 module_exit(rawpost6_table_exit);
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_LICENSE("GPL");

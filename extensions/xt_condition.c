@@ -35,7 +35,7 @@ static unsigned int condition_gid_perms = 0;
 
 MODULE_AUTHOR("Stephane Ouellette <ouellettes@videotron.ca>");
 MODULE_AUTHOR("Massimiliano Hofer <max@nucleus.it>");
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_DESCRIPTION("Allows rules to match against condition variables");
 MODULE_LICENSE("GPL");
 module_param(condition_list_perms, uint, S_IRUSR | S_IWUSR);

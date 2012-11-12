@@ -1,6 +1,6 @@
 /*
  *	rawpost table for ip_tables
- *	written by Jan Engelhardt <jengelh [at] medozas de>, 2008 - 2009
+ *	written by Jan Engelhardt, 2008 - 2009
  *	placed in the Public Domain
  */
 #include <linux/module.h>
@@ -105,5 +105,5 @@ static void __exit rawpost4_table_exit(void)
 module_init(rawpost4_table_init);
 module_exit(rawpost4_table_exit);
 MODULE_DESCRIPTION("Xtables: rawpost table for use with RAWNAT");
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_LICENSE("GPL");

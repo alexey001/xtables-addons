@@ -1,6 +1,6 @@
 /*
  *	"CHAOS" target extension for Xtables
- *	Copyright © Jan Engelhardt <jengelh [at] medozas de>, 2006 - 2008
+ *	Copyright © Jan Engelhardt, 2006 - 2008
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License; either
@@ -274,6 +274,6 @@ static void __exit chaos_tg_exit(void)
 module_init(chaos_tg_init);
 module_exit(chaos_tg_exit);
 MODULE_DESCRIPTION("Xtables: Network scan slowdown with non-deterministic results");
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_CHAOS");

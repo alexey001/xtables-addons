@@ -1,6 +1,6 @@
 /*
  *	API compat layer
- *	written by Jan Engelhardt <jengelh [at] medozas de>, 2008 - 2010
+ *	written by Jan Engelhardt, 2008 - 2010
  *
  *	This program is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License, either

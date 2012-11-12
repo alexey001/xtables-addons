@@ -349,7 +349,7 @@ static void __exit rawnat_tg_exit(void)
 
 module_init(rawnat_tg_init);
 module_exit(rawnat_tg_exit);
-MODULE_AUTHOR("Jan Engelhardt <jengelh@medozas.de>");
+MODULE_AUTHOR("Jan Engelhardt ");
 MODULE_DESCRIPTION("Xtables: conntrack-less raw NAT");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_RAWSNAT");
