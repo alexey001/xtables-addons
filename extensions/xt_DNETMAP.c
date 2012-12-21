@@ -27,10 +27,9 @@
 #include <linux/netfilter_ipv4.h>
 #include <linux/netfilter/x_tables.h>
 #include <linux/version.h>
-#include <net/netfilter/nf_nat_rule.h>
 #include <net/net_namespace.h>
 #include <net/netns/generic.h>
-#include <linux/netfilter/nf_nat.h>
+#include <net/netfilter/nf_nat.h>
 #include "compat_xtables.h"
 #include "xt_DNETMAP.h"
 
