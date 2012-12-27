@@ -16,11 +16,12 @@ Supported configurations for this release
 
 	* kernel-devel >= 3.7
 	  with prepared build/output directory
-	  - CONFIG_NF_CONNTRACK or CONFIG_IP_NF_CONNTRACK
-	  - CONFIG_NF_CONNTRACK_MARK or CONFIG_IP_NF_CONNTRACK_MARK
-	    enabled =y or as module (=m)
+	  - CONFIG_NF_CONNTRACK
+	  - CONFIG_NF_CONNTRACK_MARK enabled =y or as module (=m)
 	  - CONFIG_CONNECTOR y/m if you wish to receive userspace
 	    notifications from pknock through netlink/connector
+
+(Use xtables-addons-1.x if you need support for Linux < 3.7.)
 
 
 Selecting extensions

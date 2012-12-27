@@ -1,6 +1,6 @@
 /*
  *	"SYSRQ" target extension for Xtables
- *	Copyright © Jan Engelhardt, 2008 - 2010
+ *	Copyright © Jan Engelhardt, 2008 - 2012
  *
  *	Based upon the ipt_SYSRQ idea by Marek Zalem <marek [at] terminus sk>
  *
@@ -24,6 +24,7 @@
 #include <linux/crypto.h>
 #include <linux/scatterlist.h>
 #include <net/ip.h>
+#include <net/ipv6.h>
 #include "compat_xtables.h"
 
 #if defined(CONFIG_CRYPTO) || defined(CONFIG_CRYPTO_MODULE)

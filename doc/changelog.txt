@@ -3,6 +3,8 @@ HEAD
 ====
 Fixes:
 - DNETMAP: fix compile error with Linux 3.7
+Enhancements:
+- Support for Linux 3.8
 
 
 v2.0 (2012-11-12)
