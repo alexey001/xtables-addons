@@ -835,7 +835,7 @@ static int __net_init dnetmap_proc_net_init(struct net *net)
 
 static void __net_exit dnetmap_proc_net_exit(struct net *net)
 {
-	proc_net_remove(net, "xt_DNETMAP");
+	remove_proc_entry("xt_DNETMAP", net->proc_net);
 }
 
 #else
