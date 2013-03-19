@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	struct ipt_ACCOUNT_context ctx;
 	struct ipt_acc_handle_ip *entry;
 	int i;
-	char optchar;
+	int optchar;
 	bool doHandleUsage = false, doHandleFree = false, doTableNames = false;
 	bool doFlush = false, doContinue = false, doCSV = false;
 
