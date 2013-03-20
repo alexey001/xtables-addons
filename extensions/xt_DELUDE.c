@@ -140,9 +140,11 @@ static void delude_send_reset(struct sk_buff *oldskb, unsigned int hook)
 static unsigned int
 delude_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 {
-	/* WARNING: This code causes reentry within iptables.
-	   This means that the iptables jump stack is now crap.  We
-	   must return an absolute verdict. --RR */
+	/*
+	 * Sending the reset causes reentrancy within iptables - and should not pose
+	 * a problem, as that is supported since Linux 2.6.35. But since we do not
+	 * actually want to have a connection open, we are still going to drop it.
+	 */
 	delude_send_reset(*pskb, par->hooknum);
 	return NF_DROP;
 }
