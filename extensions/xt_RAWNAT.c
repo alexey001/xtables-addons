@@ -109,7 +109,7 @@ static void rawnat4_update_l4(struct sk_buff *skb, __be32 oldip, __be32 newip)
 
 static unsigned int rawnat4_writable_part(const struct iphdr *iph)
 {
-	unsigned int wlen = sizeof(*iph);
+	unsigned int wlen = iph->ihl * 4;
 
 	switch (iph->protocol) {
 	case IPPROTO_TCP:
