@@ -117,18 +117,6 @@ static int psd_mt_parse(int c, char **argv, int invert, unsigned int *flags,
 /* Final check; nothing. */
 static void psd_mt_final_check(unsigned int flags) {}
 
-/* Prints out the targinfo. */
-static void psd_mt_print(const void *ip, const struct xt_entry_match *match, int numeric)
-{
-	const struct xt_psd_info *psdinfo = (const struct xt_psd_info *)match->data;
-	printf(" psd ");
-	printf("weight-threshold: %u ", psdinfo->weight_threshold);
-	printf("delay-threshold: %u ", psdinfo->delay_threshold);
-	printf("lo-ports-weight: %u ", psdinfo->lo_ports_weight);
-	printf("hi-ports-weight: %u ", psdinfo->hi_ports_weight);
-}
-
-/* Saves the union ipt_targinfo in parsable form to stdout. */
 static void psd_mt_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_psd_info *psdinfo = (const struct xt_psd_info *)match->data;
@@ -136,6 +124,12 @@ static void psd_mt_save(const void *ip, const struct xt_entry_match *match)
 	printf("--psd-delay-threshold %u ", psdinfo->delay_threshold);
 	printf("--psd-lo-ports-weight %u ", psdinfo->lo_ports_weight);
 	printf("--psd-hi-ports-weight %u ", psdinfo->hi_ports_weight);
+}
+
+static void psd_mt_print(const void *ip, const struct xt_entry_match *match, int numeric)
+{
+	printf(" -m psd");
+	psd_mt_save(ip, match);
 }
 
 static struct xtables_match psd_mt_reg = {

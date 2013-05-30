@@ -217,7 +217,7 @@ ipp2p_mt_print1(const void *entry, const struct xt_entry_match *match,
 static void ipp2p_mt_print(const void *entry,
     const struct xt_entry_match *match, int numeric)
 {
-	printf(" ipp2p ");
+	printf(" -m ipp2p ");
 	ipp2p_mt_print1(entry, match, true);
 }
 

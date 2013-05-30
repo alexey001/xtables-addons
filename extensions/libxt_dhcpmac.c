@@ -62,15 +62,6 @@ static void dhcpmac_mt_check(unsigned int flags)
 		           "--mac parameter required");
 }
 
-static void dhcpmac_mt_print(const void *ip,
-    const struct xt_entry_match *match, int numeric)
-{
-	const struct dhcpmac_info *info = (void *)match->data;
-
-	printf(" dhcpmac %s" DH_MAC_FMT "/%u ",
-	       info->invert ? "!" : "", DH_MAC_HEX(info->addr), info->mask);
-}
-
 static void dhcpmac_mt_save(const void *ip,
     const struct xt_entry_match *match)
 {
@@ -80,6 +71,13 @@ static void dhcpmac_mt_save(const void *ip,
 		printf(" !");
 	printf(" --mac " DH_MAC_FMT "/%u ",
 	       DH_MAC_HEX(info->addr), info->mask);
+}
+
+static void dhcpmac_mt_print(const void *ip,
+    const struct xt_entry_match *match, int numeric)
+{
+	printf(" -m dhcpmac");
+	dhcpmac_mt_save(ip, match);
 }
 
 static struct xtables_match dhcpmac_mt_reg = {

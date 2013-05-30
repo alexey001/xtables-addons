@@ -252,31 +252,6 @@ geoip_final_check(unsigned int flags)
 }
 
 static void
-geoip_print(const void *ip, const struct xt_entry_match *match, int numeric)
-{
-	const struct xt_geoip_match_info *info = (void*)match->data;
-
-	u_int8_t i;
-
-	if (info->flags & XT_GEOIP_SRC)
-		printf(" Source ");
-	else
-		printf(" Destination ");
-
-	if (info->count > 1)
-		printf("countries: ");
-	else
-		printf("country: ");
-
-	if (info->flags & XT_GEOIP_INV)
-		printf("! ");
-
-	for (i = 0; i < info->count; i++)
-		 printf("%s%c%c", i ? "," : "", COUNTRY(info->cc[i]));
-	printf(" ");
-}
-
-static void
 geoip_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_geoip_match_info *info = (void *)match->data;
@@ -293,6 +268,13 @@ geoip_save(const void *ip, const struct xt_entry_match *match)
 	for (i = 0; i < info->count; i++)
 		printf("%s%c%c", i ? "," : "", COUNTRY(info->cc[i]));
 	printf(" ");
+}
+
+static void
+geoip_print(const void *ip, const struct xt_entry_match *match, int numeric)
+{
+	printf(" -m geoip");
+	geoip_save(ip, match);
 }
 
 static struct xtables_match geoip_match[] = {

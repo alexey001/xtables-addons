@@ -57,17 +57,6 @@ static void gradm_mt_check(unsigned int flags)
 {
 }
 
-static void gradm_mt_print(const void *ip, const struct xt_entry_match *match,
-                           int numeric)
-{
-	const struct xt_gradm_mtinfo *info = (const void *)match->data;
-
-	if (info->invflags)
-		printf("gradm: disabled");
-	else
-		printf("gradm: enabled");
-}
-
 static void gradm_mt_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_gradm_mtinfo *info = (const void *)match->data;
@@ -76,6 +65,13 @@ static void gradm_mt_save(const void *ip, const struct xt_entry_match *match)
 		printf(" --disabled ");
 	else
 		printf(" --enabled ");
+}
+
+static void gradm_mt_print(const void *ip, const struct xt_entry_match *match,
+                           int numeric)
+{
+	printf(" -m gradm");
+	gradm_mt_save(ip, match);
 }
 
 static struct xtables_match gradm_mt_reg = {

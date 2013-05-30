@@ -67,24 +67,6 @@ static void tarpit_tg_check(unsigned int flags)
 			"TARPIT: only one action can be used at a time");
 }
 
-static void tarpit_tg_print(const void *ip,
-    const struct xt_entry_target *target, int numeric)
-{
-	const struct xt_tarpit_tginfo *info = (void *)target->data;
-
-	switch (info->variant) {
-	case XTTARPIT_HONEYPOT:
-		printf(" honeypot mode ");
-		break;
-	case XTTARPIT_RESET:
-		printf(" reset mode ");
-		break;
-	default:
-		printf(" tarpit mode ");
-		break;
-	}
-}
-
 static void tarpit_tg_save(const void *ip,
     const struct xt_entry_target *target)
 {
@@ -101,6 +83,13 @@ static void tarpit_tg_save(const void *ip,
 		printf(" --reset ");
 		break;
 	}
+}
+
+static void tarpit_tg_print(const void *ip,
+    const struct xt_entry_target *target, int numeric)
+{
+	printf(" -j TARPIT");
+	tarpit_tg_save(ip, target);
 }
 
 static struct xtables_target tarpit_tg_reg = {

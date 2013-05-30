@@ -64,30 +64,6 @@ static void lscan_mt_check(unsigned int flags)
 {
 }
 
-static void lscan_mt_print(const void *ip,
-    const struct xt_entry_match *match, int numeric)
-{
-	const struct xt_lscan_mtinfo *info = (const void *)(match->data);
-	const char *s = "";
-
-	printf(" lscan ");
-	if (info->match_stealth) {
-		printf("STEALTH");
-		s = ",";
-	}
-	if (info->match_syn) {
-		printf("%sSYNSCAN", s);
-		s = ",";
-	}
-	if (info->match_cn) {
-		printf("%sCNSCAN", s);
-		s = ",";
-	}
-	if (info->match_gr)
-		printf("%sGRSCAN", s);
-	printf(" ");
-}
-
 static void lscan_mt_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_lscan_mtinfo *info = (const void *)(match->data);
@@ -100,6 +76,13 @@ static void lscan_mt_save(const void *ip, const struct xt_entry_match *match)
 		printf(" --cnscan ");
 	if (info->match_gr)
 		printf(" --grscan ");
+}
+
+static void lscan_mt_print(const void *ip,
+    const struct xt_entry_match *match, int numeric)
+{
+	printf(" -m lscan");
+	lscan_mt_save(ip, match);
 }
 
 static struct xtables_match lscan_mt_reg = {

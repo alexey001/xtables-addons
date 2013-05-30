@@ -62,20 +62,18 @@ static void condition_check(unsigned int flags)
 			   "Condition match: must specify --condition");
 }
 
-static void condition_print(const void *ip, const struct xt_entry_match *match,
-                            int numeric)
-{
-	const struct xt_condition_mtinfo *info = (const void *)match->data;
-
-	printf(" condition %s%s ", (info->invert) ? "!" : "", info->name);
-}
-
-
 static void condition_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_condition_mtinfo *info = (const void *)match->data;
 
 	printf("%s --condition \"%s\" ", info->invert ? " !" : "", info->name);
+}
+
+static void condition_print(const void *ip, const struct xt_entry_match *match,
+                            int numeric)
+{
+	printf(" -m condition");
+	condition_save(ip, match);
 }
 
 static struct xtables_match condition_mt_reg = {

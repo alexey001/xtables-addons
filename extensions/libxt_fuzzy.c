@@ -83,21 +83,19 @@ static void fuzzy_mt_check(unsigned int flags)
 {
 }
 
-static void fuzzy_mt_print(const void *ip, const struct xt_entry_match *match,
-                           int numeric)
-{
-	const struct xt_fuzzy_mtinfo *info = (const void *)match->data;
-
-	printf(" fuzzy: lower limit = %u pps - upper limit = %u pps ",
-	       info->minimum_rate, info->maximum_rate);
-}
-
 static void fuzzy_mt_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_fuzzy_mtinfo *info = (const void *)match->data;
 
 	printf(" --lower-limit %u ", info->minimum_rate);
 	printf(" --upper-limit %u ", info->maximum_rate);
+}
+
+static void fuzzy_mt_print(const void *ip, const struct xt_entry_match *match,
+                           int numeric)
+{
+	printf(" -m fuzzy");
+	fuzzy_mt_save(ip, match);
 }
 
 static struct xtables_match fuzzy_mt_reg = {

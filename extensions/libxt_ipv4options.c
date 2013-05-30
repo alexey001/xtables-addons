@@ -133,17 +133,6 @@ static void ipv4options_print_flags(const struct xt_ipv4options_mtinfo1 *info,
 		}
 }
 
-static void ipv4options_mt_print(const void *ip,
-    const struct xt_entry_match *match, int numeric)
-{
-	const struct xt_ipv4options_mtinfo1 *info = (void *)match->data;
-
-	printf(" ipv4options %s ",
-	       (info->flags & XT_V4OPTS_ANY) ? "any-of" : "all-of");
-	ipv4options_print_flags(info, numeric);
-	printf(" ");
-}
-
 static void ipv4options_mt_save(const void *ip,
     const struct xt_entry_match *match)
 {
@@ -156,6 +145,13 @@ static void ipv4options_mt_save(const void *ip,
 	if (info->flags & XT_V4OPTS_ANY)
 		printf(" --any");
 	printf(" ");
+}
+
+static void ipv4options_mt_print(const void *ip,
+    const struct xt_entry_match *match, int numeric)
+{
+	printf(" -m ipv4options");
+	ipv4options_mt_save(ip, match);
 }
 
 static struct xtables_match ipv4options_mt_reg = {

@@ -175,33 +175,6 @@ static void iface_mt_check(unsigned int flags)
 			"iface: You must specify at least one option");
 }
 
-static void iface_mt_print(const void *ip, const struct xt_entry_match *match,
-    int numeric)
-{
-	const struct xt_iface_mtinfo *info = (const void *)match->data;
-
-	printf(" iface: ");
-	if (info->flags & XT_IFACE_DEV_IN)
-		printf("(in)");
-	else if (info->flags & XT_IFACE_DEV_OUT)
-		printf("(out)");
-	else
-		printf("%s", info->ifname);
-	printf(" [state:");
-	iface_print_opt(info, XT_IFACE_UP,          "up");
-	iface_print_opt(info, XT_IFACE_BROADCAST,   "broadcast");
-	iface_print_opt(info, XT_IFACE_LOOPBACK,    "loopback");
-	iface_print_opt(info, XT_IFACE_POINTOPOINT, "pointopoint");
-	iface_print_opt(info, XT_IFACE_RUNNING,     "running");
-	iface_print_opt(info, XT_IFACE_NOARP,       "noarp");
-	iface_print_opt(info, XT_IFACE_PROMISC,     "promisc");
-	iface_print_opt(info, XT_IFACE_MULTICAST,   "multicast");
-	iface_print_opt(info, XT_IFACE_DYNAMIC,     "dynamic");
-	iface_print_opt(info, XT_IFACE_LOWER_UP,    "lower_up");
-	iface_print_opt(info, XT_IFACE_DORMANT,     "dormant");
-	printf("] ");
-}
-
 static void iface_mt_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_iface_mtinfo *info = (const void *)match->data;
@@ -224,6 +197,13 @@ static void iface_mt_save(const void *ip, const struct xt_entry_match *match)
 	iface_print_opt(info, XT_IFACE_LOWER_UP,    "--lower_up");
 	iface_print_opt(info, XT_IFACE_DORMANT,     "--dormant");
 	printf(" ");
+}
+
+static void iface_mt_print(const void *ip, const struct xt_entry_match *match,
+    int numeric)
+{
+	printf(" -m iface");
+	iface_mt_save(ip, match);
 }
 
 static struct xtables_match iface_mt_reg = {

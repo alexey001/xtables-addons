@@ -78,15 +78,6 @@ logmark_tg_parse(int c, char **argv, int invert, unsigned int *flags,
 }
 
 static void
-logmark_tg_print(const void *ip, const struct xt_entry_target *target,
-                 int numeric)
-{
-	const struct xt_logmark_tginfo *info = (void *)target->data;
-
-	printf(" LOGMARK level %u prefix \"%s\" ", info->level, info->prefix);
-}
-
-static void
 logmark_tg_save(const void *ip, const struct xt_entry_target *target)
 {
 	const struct xt_logmark_tginfo *info = (void *)target->data;
@@ -95,6 +86,14 @@ logmark_tg_save(const void *ip, const struct xt_entry_target *target)
 		printf(" --log-level %u ", info->level);
 	if (*info->prefix != '\0')
 		printf(" --log-prefix \"%s\" ", info->prefix);
+}
+
+static void
+logmark_tg_print(const void *ip, const struct xt_entry_target *target,
+                 int numeric)
+{
+	printf(" -j LOGMARK");
+	logmark_tg_save(ip, target);
 }
 
 static struct xtables_target logmark_tg_reg = {

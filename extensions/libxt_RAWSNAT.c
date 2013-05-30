@@ -104,34 +104,6 @@ static void rawsnat_tg_check(unsigned int flags)
 }
 
 static void
-rawsnat_tg4_print(const void *entry, const struct xt_entry_target *target,
-                  int numeric)
-{
-	const struct xt_rawnat_tginfo *info = (const void *)target->data;
-
-	if (!numeric && info->mask == 32)
-		printf(" to-source %s ",
-		       xtables_ipaddr_to_anyname(&info->addr.in));
-	else
-		printf(" to-source %s/%u ",
-		       xtables_ipaddr_to_numeric(&info->addr.in), info->mask);
-}
-
-static void
-rawsnat_tg6_print(const void *entry, const struct xt_entry_target *target,
-                  int numeric)
-{
-	const struct xt_rawnat_tginfo *info = (const void *)target->data;
-
-	if (!numeric && info->mask == 128)
-		printf(" to-source %s ",
-		       xtables_ip6addr_to_anyname(&info->addr.in6));
-	else
-		printf(" to-source %s/%u ",
-		       xtables_ip6addr_to_numeric(&info->addr.in6), info->mask);
-}
-
-static void
 rawsnat_tg4_save(const void *entry, const struct xt_entry_target *target)
 {
 	const struct xt_rawnat_tginfo *info = (const void *)target->data;
@@ -149,6 +121,22 @@ rawsnat_tg6_save(const void *entry, const struct xt_entry_target *target)
 	printf(" --to-source %s/%u ",
 	       xtables_ip6addr_to_numeric(&info->addr.in6),
 	       info->mask);
+}
+
+static void
+rawsnat_tg4_print(const void *entry, const struct xt_entry_target *target,
+                  int numeric)
+{
+	printf(" -j RAWSNAT");
+	rawsnat_tg4_save(entry, target);
+}
+
+static void
+rawsnat_tg6_print(const void *entry, const struct xt_entry_target *target,
+                  int numeric)
+{
+	printf(" -j RAWSNAT");
+	rawsnat_tg6_save(entry, target);
 }
 
 static struct xtables_target rawsnat_tg_reg[] = {

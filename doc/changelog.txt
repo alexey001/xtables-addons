@@ -5,6 +5,8 @@ Fixes:
 - xt_RAWNAT: ensure correct operation in the presence of IPv4 options
 - xt_geoip: do not throw a warnings when country database is size 0
 - xt_quota2: print "!" at the correct position during iptables-save
+Changes:
+- Make print (iptables -L) output the same as save (-S)
 
 
 v2.2 (2013-03-31)

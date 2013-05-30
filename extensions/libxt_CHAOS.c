@@ -64,21 +64,6 @@ static void chaos_tg_check(unsigned int flags)
 		           "may be specified");
 }
 
-static void chaos_tg_print(const void *ip,
-    const struct xt_entry_target *target, int numeric)
-{
-	const struct xt_chaos_tginfo *info = (const void *)target->data;
-
-	switch (info->variant) {
-	case XTCHAOS_DELUDE:
-		printf(" DELUDE ");
-		break;
-	case XTCHAOS_TARPIT:
-		printf(" TARPIT ");
-		break;
-	}
-}
-
 static void chaos_tg_save(const void *ip, const struct xt_entry_target *target)
 {
 	const struct xt_chaos_tginfo *info = (const void *)target->data;
@@ -91,6 +76,13 @@ static void chaos_tg_save(const void *ip, const struct xt_entry_target *target)
 		printf(" --tarpit ");
 		break;
 	}
+}
+
+static void chaos_tg_print(const void *ip,
+    const struct xt_entry_target *target, int numeric)
+{
+	printf(" -j CHAOS");
+	chaos_tg_save(ip, target);
 }
 
 static struct xtables_target chaos_tg_reg = {
