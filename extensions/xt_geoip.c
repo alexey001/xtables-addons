@@ -83,10 +83,18 @@ geoip_add_node(const struct geoip_country_user __user *umem_ptr,
 	p->count   = umem.count;
 	p->cc      = umem.cc;
 	size = p->count * geoproto_size[proto];
-	subnet = vmalloc(size);
-	if (subnet == NULL) {
-		ret = -ENOMEM;
-		goto free_p;
+	if (size == 0) {
+		/*
+		 * Believe it or not, vmalloc prints a warning to dmesg for
+		 * zero-sized allocations :-/
+		 */
+		subnet = NULL;
+	} else {
+		subnet = vmalloc(size);
+		if (subnet == NULL) {
+			ret = -ENOMEM;
+			goto free_p;
+		}
 	}
 	if (copy_from_user(subnet,
 	    (const void __user *)(unsigned long)umem.subnets, size) != 0) {
