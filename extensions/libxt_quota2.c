@@ -98,8 +98,6 @@ quota_mt2_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_quota_mtinfo2 *q = (void *)match->data;
 
-	if (q->flags & XT_QUOTA_INVERT)
-		printf(" !");
 	if (q->flags & XT_QUOTA_GROW)
 		printf(" --grow ");
 	if (q->flags & XT_QUOTA_NO_CHANGE)
@@ -108,6 +106,8 @@ quota_mt2_save(const void *ip, const struct xt_entry_match *match)
 		printf(" --packets ");
 	if (*q->name != '\0')
 		printf(" --name %s ", q->name);
+	if (q->flags & XT_QUOTA_INVERT)
+		printf(" !");
 	printf(" --quota %llu ", (unsigned long long)q->quota);
 }
 
