@@ -64,12 +64,12 @@ Removes binding with \fIIP\fR as prenat or postnat address. If removed binding
 is currently static, it'll make entry available for dynamic allocation.
 .TP
 echo "+persistent" > \fB/proc/net/xt_DNETMAP/subnet_mask\fR
-Sets persistent flag for prefix. It's usefull if you don't want bindings to get
+Sets persistent flag for prefix. It's useful if you don't want bindings to get
 flushed when firewall is restarted. You can check if prefix is persistent by
 printing \fB/proc/net/xt_DNETMAP/\fR\fIsubnet\fR\fB_\fR\fImask\fR\fB_stat\fR
 contents.
 .TP
-echo "-persistent" > \fB/proc/net/xt_DNETMAP/subnet_mask\fR
+echo "\-persistent" > \fB/proc/net/xt_DNETMAP/subnet_mask\fR
 Unsets persistent flag for prefix. In this mode prefix will be deleted if the
 last iptables rule for that prefix is removed.
 .TP
@@ -90,7 +90,7 @@ using \fBdisable_log\fR module parameter.
 
 \fB1.\fR Map subnet 192.168.0.0/24 to subnets 20.0.0.0/26. SNAT only:
 
-iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix 20.0.0.0/26
+iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 20.0.0.0/26
 
 Active hosts from 192.168.0.0/24 subnet are mapped to 20.0.0.0/26. If packet
 from not yet bound prenat-ip hits the rule and there are no free or timed-out
@@ -101,10 +101,10 @@ bindings ttl value is regenerated to default_ttl and SNAT is performed.
 \fB2.\fR Use of \fB\-\-reuse\fR and \fB\-\-ttl\fR switches, multiple rule
 interaction:
 
-iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix
-20.0.0.0/26 --reuse --ttl 200
+iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix
+20.0.0.0/26 \-\-reuse \-\-ttl 200
 
-iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix 30.0.0.0/26
+iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 30.0.0.0/26
 
 Active hosts from 192.168.0.0/24 subnet are mapped to 20.0.0.0/26 with ttl =
 200 seconds. If there are no free addresses in first prefix the next one
@@ -117,9 +117,9 @@ If both subnets are exhaused, then chain traversal continues.
 
 \fB3.\fR Map 192.168.0.0/24 to subnets 20.0.0.0/26 bidirectional way:
 
-iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix 20.0.0.0/26
+iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 20.0.0.0/26
 
-iptables -t nat -A PREROUTING -j DNETMAP
+iptables \-t nat \-A PREROUTING \-j DNETMAP
 
 If host 192.168.0.10 generates some traffic, it gets bound to first free IP in
 subnet - 20.0.0.0. Now any traffic directed to 20.0.0.0 gets DNATed to
@@ -130,8 +130,8 @@ DNAT work for specific prefix only.
 
 \fB4.\fR Map 192.168.0.0/24 to subnets 20.0.0.0/26 with static assignments only:
 
-iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix 20.0.0.0/26
---static
+iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 20.0.0.0/26
+\-\-static
 
 echo "+192.168.0.10:20.0.0.1" > /proc/net/xt_DNETMAP/20.0.0.0_26
 .br
@@ -145,12 +145,12 @@ using non-static entries.
 
 \fB5.\fR Persistent prefix:
 
-iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix 20.0.0.0/26
---persistent
+iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 20.0.0.0/26
+\-\-persistent
 .br
 \fBor\fR
 .br
-iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -j DNETMAP --prefix 20.0.0.0/26
+iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 20.0.0.0/26
 .br
 echo "+persistent" > /proc/net/xt_DNETMAP/20.0.0.0_26
 
@@ -162,11 +162,11 @@ cat /proc/net/xt_DNETMAP/20.0.0.0_26
 
 Flush iptables nat table and see that prefix is still in existence:
 .br
-iptables -F -t nat
+iptables \-F \-t nat
 .br
-ls -l /proc/net/xt_DNETMAP
+ls \-l /proc/net/xt_DNETMAP
 .br
--rw-r--r-- 1 root root 0 06-10 09:01 20.0.0.0_26
+\-rw\-r\-\-r\-\- 1 root root 0 06\-10 09:01 20.0.0.0_26
 .br
--rw-r--r-- 1 root root 0 06-10 09:01 20.0.0.0_26_stat
+\-rw\-r\-\-r\-\- 1 root root 0 06\-10 09:01 20.0.0.0_26_stat
 .

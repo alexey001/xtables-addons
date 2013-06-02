@@ -1,4 +1,4 @@
-Detects simple low-level scan attemps based upon the packet's contents.
+Detects simple low-level scan attempts based upon the packet's contents.
 (This is
 different from other implementations, which also try to match the rate of new
 connections.) Note that an attempt is only discovered after it has been carried

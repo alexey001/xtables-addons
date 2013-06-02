@@ -15,10 +15,10 @@ modprobe xt_pknock
 .PP
 Example 1 (TCP mode, manual closing of opened port not possible):
 .IP
-iptables -P INPUT DROP
+iptables \-P INPUT DROP
 .IP
-iptables -A INPUT -p tcp -m pknock --knockports 4002,4001,4004 --strict
---name SSH --time 10 --autoclose 60 --dport 22 -j ACCEPT
+iptables \-A INPUT \-p tcp \-m pknock \-\-knockports 4002,4001,4004 \-\-strict
+\-\-name SSH \-\-time 10 \-\-autoclose 60 \-\-dport 22 \-j ACCEPT
 .PP
 The rule will allow tcp port 22 for the attempting IP address after the successful reception of TCP SYN packets
 to ports 4002, 4001 and 4004, in this order (a.k.a. port-knocking).
@@ -33,10 +33,10 @@ Example 2 (UDP mode \(em non-replayable and non-spoofable, manual closing
 of opened port possible, secure, also called "SPA" = Secure Port
 Authorization):
 .IP
-iptables -A INPUT -p udp -m pknock --knockports 4000 --name FTP
---opensecret foo --closesecret bar --autoclose 240 -j DROP
+iptables \-A INPUT \-p udp \-m pknock \-\-knockports 4000 \-\-name FTP
+\-\-opensecret foo \-\-closesecret bar \-\-autoclose 240 \-j DROP
 .IP
-iptables -A INPUT -p tcp -m pknock --checkip --name FTP --dport 21 -j ACCEPT
+iptables \-A INPUT \-p tcp \-m pknock \-\-checkip \-\-name FTP \-\-dport 21 \-j ACCEPT
 .PP
 The first rule will create an "ALLOWED" record in /proc/net/xt_pknock/FTP after
 the successful reception of an UDP packet to port 4000. The packet payload must be
