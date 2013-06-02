@@ -1,3 +1,4 @@
+.PP
 The "quota2" implements a named counter which can be increased or decreased
 on a per-match basis. Available modes are packet counting or byte counting.
 The value of the counter can be read and reset through procfs, thereby making

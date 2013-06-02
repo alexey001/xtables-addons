@@ -1,3 +1,4 @@
+.PP
 Attempt to detect TCP and UDP port scans. This match was derived from
 Solar Designer's scanlogd.
 .TP

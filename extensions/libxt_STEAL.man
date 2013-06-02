@@ -1,2 +1,3 @@
+.PP
 Like the DROP target, but does not throw an error like DROP when used in the
 \fBOUTPUT\fP chain.

@@ -1,3 +1,4 @@
+.PP
 This module matches packets based on grsecurity RBAC status.
 .TP
 [\fB!\fP] \fB\-\-enabled\fP

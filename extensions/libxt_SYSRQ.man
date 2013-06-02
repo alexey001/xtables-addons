@@ -1,3 +1,4 @@
+.PP
 The SYSRQ target allows to remotely trigger sysrq on the local machine over the
 network. This can be useful when vital parts of the machine hang, for example
 an oops in a filesystem causing locks to be not released and processes to get

@@ -1,3 +1,4 @@
+.PP
 The "ipv4options" module allows to match against a set of IPv4 header options.
 .TP
 \fB\-\-flags\fP [\fB!\fP]\fIsymbol\fP[\fB,\fP[\fB!\fP]\fIsymbol...\fP]

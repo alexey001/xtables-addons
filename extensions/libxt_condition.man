@@ -1,3 +1,4 @@
+.PP
 This matches if a specific condition variable is (un)set.
 .TP
 [\fB!\fP] \fB\-\-condition\fP \fIname\fP

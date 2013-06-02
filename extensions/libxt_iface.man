@@ -1,3 +1,4 @@
+.PP
 Allows you to check interface states. First, an interface needs to be selected
 for comparison. Exactly one option of the following three must be specified:
 .TP

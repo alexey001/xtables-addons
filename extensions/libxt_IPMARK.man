@@ -1,7 +1,8 @@
+.PP
 Allows you to mark a received packet basing on its IP address. This
 can replace many mangle/mark entries with only one, if you use
 firewall based classifier.
-
+.PP
 This target is to be used inside the \fBmangle\fP table.
 .TP
 \fB\-\-addr\fP {\fBsrc\fP|\fBdst\fP}

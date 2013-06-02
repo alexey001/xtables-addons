@@ -1,16 +1,16 @@
+.PP
 The \fBDNETMAP\fR target allows dynamic two-way 1:1 mapping of IPv4 subnets.
 Single rule can map private subnet to shorter public subnet creating and
 maintaining unambigeous private-public ip bindings. Second rule can be used to
 map new flows to private subnet according to maintained bindings. Target allows
 efficient public IPv4 space usage and unambigeous NAT at the same time.
-
+.PP
 Target can be used only in \fBnat\fR table in \fBPOSTROUTING\fR or \fBOUTPUT\fR
 chains for SNAT and in \fBPREROUTING\fR for DNAT. Only flows directed to bound
 IPs will be DNATed. Packet continues chain traversal if there is no free
 postnat-ip to be assigned to prenat-ip. Default binding \fBttl\fR is \fI10
 minutes\fR and can be changed using \fBdefault_ttl\fR module option. Default ip
 hash size is 256 and can be changed using \fBhash_size\fR module option.
-
 .TP
 \fB\-\-prefix\fR \fIaddr\fR\fB/\fR\fImask\fR
 Network subnet to map to. If not specified, all existing prefixes are used.
@@ -35,7 +35,7 @@ bindings ttl is kept unchanged. If not specified then default ttl value (600s)
 is used.
 .PP
 \fB* /proc interface\fR
-
+.PP
 Module creates following entries for each new specified subnet:
 .TP
 \fB/proc/net/xt_DNETMAP/\fR\fIsubnet\fR\fB_\fR\fImask\fR
@@ -80,71 +80,70 @@ and are available for dynamic bindings.
 Note! Entries are removed if the last iptables rule for a specific prefix is
 deleted unless there's persistent flag set.
 .PP
-
 \fB* Logging\fR
-
+.PP
 Module logs binding add/timeout events to klog. This behaviour can be disabled
 using \fBdisable_log\fR module parameter.
-
+.PP
 \fB* Examples\fR
-
+.PP
 \fB1.\fR Map subnet 192.168.0.0/24 to subnets 20.0.0.0/26. SNAT only:
-
+.PP
 iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 20.0.0.0/26
-
+.PP
 Active hosts from 192.168.0.0/24 subnet are mapped to 20.0.0.0/26. If packet
 from not yet bound prenat-ip hits the rule and there are no free or timed-out
 (ttl<0) entries in prefix 20.0.0.0/28, then notice is logged to klog and chain
 traversal continues. If packet from already bound prenat-ip hits the rule,
 bindings ttl value is regenerated to default_ttl and SNAT is performed.
-
+.PP
 \fB2.\fR Use of \fB\-\-reuse\fR and \fB\-\-ttl\fR switches, multiple rule
 interaction:
-
+.PP
 iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix
 20.0.0.0/26 \-\-reuse \-\-ttl 200
-
+.PP
 iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 30.0.0.0/26
-
+.PP
 Active hosts from 192.168.0.0/24 subnet are mapped to 20.0.0.0/26 with ttl =
 200 seconds. If there are no free addresses in first prefix the next one
 (30.0.0.0/26) is used with default ttl. It's important to note that the first
 rule SNATs all flows whose source IP is already actively (ttl>0) bound to ANY
 prefix. Parameter \fB\-\-reuse\fR makes this functionality work even for
 inactive (ttl<0) entries.
-
+.PP
 If both subnets are exhaused, then chain traversal continues.
-
+.PP
 \fB3.\fR Map 192.168.0.0/24 to subnets 20.0.0.0/26 bidirectional way:
-
+.PP
 iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 20.0.0.0/26
-
+.PP
 iptables \-t nat \-A PREROUTING \-j DNETMAP
-
+.PP
 If host 192.168.0.10 generates some traffic, it gets bound to first free IP in
 subnet - 20.0.0.0. Now any traffic directed to 20.0.0.0 gets DNATed to
 192.168.0.10 as long as there's an active (ttl>0) binding. There's no need to
 specify \fB\-\-prefix\fR parameter in PREROUTING rule, because this way it DNATs
 traffic to all active prefixes. You could specify prefix it you'd like to make
 DNAT work for specific prefix only.
-
+.PP
 \fB4.\fR Map 192.168.0.0/24 to subnets 20.0.0.0/26 with static assignments only:
-
+.PP
 iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 20.0.0.0/26
 \-\-static
-
+.PP
 echo "+192.168.0.10:20.0.0.1" > /proc/net/xt_DNETMAP/20.0.0.0_26
 .br
 echo "+192.168.0.11:20.0.0.2" > /proc/net/xt_DNETMAP/20.0.0.0_26
 .br
 echo "+192.168.0.51:20.0.0.3" > /proc/net/xt_DNETMAP/20.0.0.0_26
-
+.PP
 This configuration will allow only preconfigured static bindings to work due to
 \fBstatic\fR rule option. Without this flag dynamic bindings would be created
 using non-static entries.
-
+.PP
 \fB5.\fR Persistent prefix:
-
+.PP
 iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 20.0.0.0/26
 \-\-persistent
 .br
@@ -153,13 +152,13 @@ iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 20.0.
 iptables \-t nat \-A POSTROUTING \-s 192.168.0.0/24 \-j DNETMAP \-\-prefix 20.0.0.0/26
 .br
 echo "+persistent" > /proc/net/xt_DNETMAP/20.0.0.0_26
-
+.PP
 Now we can check persistent flag of the prefix:
 .br
 cat /proc/net/xt_DNETMAP/20.0.0.0_26
 .br
 0 0 64 0 \fBpersistent\fR
-
+.PP
 Flush iptables nat table and see that prefix is still in existence:
 .br
 iptables \-F \-t nat

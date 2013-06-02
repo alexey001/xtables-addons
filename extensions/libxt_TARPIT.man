@@ -1,3 +1,4 @@
+.PP
 Captures and holds incoming TCP connections using no local per-connection
 resources.
 .PP

@@ -1,3 +1,4 @@
+.PP
 Causes confusion on the other end by doing odd things with incoming packets.
 CHAOS will randomly reply (or not) with one of its configurable subtargets:
 .TP

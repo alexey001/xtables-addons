@@ -1,3 +1,4 @@
+.PP
 The LOGMARK target will log packet and connection marks to syslog.
 .TP
 \fB\-\-log\-level\fR \fIlevel\fR

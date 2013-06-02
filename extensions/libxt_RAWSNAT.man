@@ -1,3 +1,4 @@
+.PP
 The \fBRAWSNAT\fR and \fBRAWDNAT\fP targets provide stateless network address
 translation.
 .PP

@@ -1,3 +1,4 @@
+.PP
 This module matches certain packets in P2P flows. It is not
 designed to match all packets belonging to a P2P connection \(em
 use IPP2P together with CONNMARK for this purpose.

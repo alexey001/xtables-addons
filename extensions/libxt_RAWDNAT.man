@@ -1,3 +1,4 @@
+.PP
 The \fBRAWDNAT\fR target will rewrite the destination address in the IP header,
 much like the \fBNETMAP\fR target.
 .TP
