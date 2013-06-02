@@ -59,7 +59,7 @@ Adds static binding between prenatIP nad postnatIP. If postnatIP is already
 bound, previous binding will be timedout immediatelly. Static binding is never
 timedout.
 .TP
-echo "-\fIIP\fR" > \fB/proc/net/xt_DNETMAP/subnet_mask\fR
+echo "\-\fIIP\fR" > \fB/proc/net/xt_DNETMAP/subnet_mask\fR
 Removes binding with \fIIP\fR as prenat or postnat address. If removed binding
 is currently static, it'll make entry available for dynamic allocation.
 .TP
