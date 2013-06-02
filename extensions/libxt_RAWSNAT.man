@@ -11,7 +11,7 @@ is that RAWNAT must happen outside of connection tracking.
 .TP
 \fB\-\-to\-source\fR \fIaddr\fR[\fB/\fR\fImask\fR]
 Network address to map to. The resulting address will be constructed the
-following way: All 'one' bits in the \fImask\fR are filled in from the new
+following way: All "one" bits in the \fImask\fR are filled in from the new
 \fIaddress\fR. All bits that are zero in the mask are filled in from the
 original address.
 .PP
@@ -26,7 +26,7 @@ it statically NATs packets, not connections, like the normal DNAT/SNAT targets
 would do. Also note that it can transform already-NATed connections \(em as
 said, it is completely external to Netfilter's connection tracking/NAT.
 .PP
-If the machine itself generates packets that are to be rawnat'ed, you need a
+If the machine itself generates packets that are to be rawnat-ed, you need a
 rule in the OUTPUT chain instead, just like you would with the stateful NAT
 targets.
 .PP
