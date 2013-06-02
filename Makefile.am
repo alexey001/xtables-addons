@@ -14,6 +14,11 @@ xtables-addons.8: FORCE
 install-exec-hook:
 	depmod -a || :;
 
+clean-local-mans:
+	${MAKE} -f Makefile.mans clean;
+
+clean-local: clean-local-mans
+
 config.status: Makefile.iptrules.in
 
 tmpdir := $(shell mktemp -dtu)
