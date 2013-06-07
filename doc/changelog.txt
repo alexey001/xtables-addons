@@ -1,6 +1,8 @@
 
 HEAD
 ====
+Enhancements:
+- Support for Linux 3.10
 Fixes:
 - xt_DNETMAP, xt_condition, xt_quota2: resolve compile error when
   CONFIG_UIDGID_STRICT_TYPE_CHECKS=y

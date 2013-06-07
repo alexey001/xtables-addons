@@ -55,4 +55,31 @@
 
 #define xt_request_find_match xtnu_request_find_match
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 9, 0)
+static inline struct inode *file_inode(struct file *f)
+{
+	return f->f_path.dentry->d_inode;
+}
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
+static inline void
+proc_set_user(struct proc_dir_entry *de, kuid_t uid, kgid_t gid)
+{
+	de->uid = uid;
+	de->gid = gid;
+}
+
+static inline void *PDE_DATA(struct inode *inode)
+{
+	return PDE(inode)->data;
+}
+
+static inline void proc_remove(struct proc_dir_entry *de)
+{
+	if (de != NULL)
+		remove_proc_entry(de->name, de->parent);
+}
+#endif
+
 #endif /* _XTABLES_COMPAT_H */

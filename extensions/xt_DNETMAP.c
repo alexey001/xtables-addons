@@ -26,6 +26,7 @@
 #include <linux/netfilter.h>
 #include <linux/netfilter_ipv4.h>
 #include <linux/netfilter/x_tables.h>
+#include <linux/seq_file.h>
 #include <linux/uidgid.h>
 #include <linux/version.h>
 #include <net/net_namespace.h>
@@ -113,12 +114,8 @@ static DEFINE_SPINLOCK(dnetmap_lock);
 static DEFINE_MUTEX(dnetmap_mutex);
 
 #ifdef CONFIG_PROC_FS
-static const struct file_operations dnetmap_tg_fops;
+static const struct file_operations dnetmap_tg_fops, dnetmap_stat_proc_fops;
 #endif
-
-static int dnetmap_stat_proc_read(char __user *buffer, char **start,
-				  off_t offset, int length, int *eof,
-				  void *data);
 
 static inline unsigned int dnetmap_entry_hash(const __be32 addr)
 {
@@ -329,21 +326,20 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 		ret = -ENOMEM;
 		goto out;
 	}
-	pde_data->uid = make_kuid(&init_user_ns, proc_uid);
-	pde_data->gid = make_kgid(&init_user_ns, proc_gid);
+	proc_set_user(pde_data, make_kuid(&init_user_ns, proc_uid),
+	              make_kgid(&init_user_ns, proc_gid));
 
 	/* statistics */
-	pde_stat = create_proc_entry(p->proc_str_stat, proc_perms,
-				     dnetmap_net->xt_dnetmap);
+	pde_stat = proc_create_data(p->proc_str_stat, proc_perms,
+		                    dnetmap_net->xt_dnetmap,
+		                    &dnetmap_stat_proc_fops, p);
 	if (pde_stat == NULL) {
 		kfree(p);
 		ret = -ENOMEM;
 		goto out;
 	}
-	pde_stat->data = p;
-	pde_stat->read_proc = dnetmap_stat_proc_read;
-	pde_stat->uid = make_kuid(&init_user_ns, proc_uid);
-	pde_stat->gid = make_kgid(&init_user_ns, proc_gid);
+	proc_set_user(pde_stat, make_kuid(&init_user_ns, proc_uid),
+	              make_kgid(&init_user_ns, proc_gid));
 #endif
 
 	spin_lock_bh(&dnetmap_lock);
@@ -594,22 +590,20 @@ static const struct seq_operations dnetmap_seq_ops = {
 
 static int dnetmap_seq_open(struct inode *inode, struct file *file)
 {
-	struct proc_dir_entry *pde = PDE(inode);
 	struct dnetmap_iter_state *st;
 
 	st = __seq_open_private(file, &dnetmap_seq_ops, sizeof(*st));
 	if (st == NULL)
 		return -ENOMEM;
 
-	st->p = pde->data;
+	st->p = PDE_DATA(inode);
 	return 0;
 }
 
 static ssize_t
 dnetmap_tg_proc_write(struct file *file, const char __user *input,size_t size, loff_t *loff)
 {
-	const struct proc_dir_entry *pde = PDE(file->f_path.dentry->d_inode);
-	struct dnetmap_prefix *p = pde->data;
+	struct dnetmap_prefix *p = PDE_DATA(file_inode(file));
 	struct dnetmap_entry *e;
 	char buf[sizeof("+192.168.100.100:200.200.200.200")];
 	const char *c = buf;
@@ -784,11 +778,9 @@ static const struct file_operations dnetmap_tg_fops = {
 };
 
 /* for statistics */
-static int dnetmap_stat_proc_read(char __user *buffer, char **start,
-				  off_t offset, int length, int *eof,
-				  void *data)
+static int dnetmap_stat_proc_show(struct seq_file *m, void *data)
 {
-	const struct dnetmap_prefix *p = data;
+	const struct dnetmap_prefix *p = m->private;
 	struct dnetmap_entry *e;
 	unsigned int used, used_static, all;
 	long int ttl, sum_ttl;
@@ -814,15 +806,24 @@ static int dnetmap_stat_proc_read(char __user *buffer, char **start,
 	}
 
 	sum_ttl = used > 0 ? sum_ttl / (used * HZ) : 0;
-	sprintf(buffer, "%u %u %u %ld %s\n", used, used_static, all, sum_ttl,(p->flags & XT_DNETMAP_PERSISTENT ? "persistent" : ""));
-
-	if (length >= strlen(buffer))
-		*eof = true;
+	seq_printf(m, "%u %u %u %ld %s\n", used, used_static, all, sum_ttl,(p->flags & XT_DNETMAP_PERSISTENT ? "persistent" : ""));
 
 	spin_unlock_bh(&dnetmap_lock);
 
-	return strlen(buffer);
+	return 0;
 }
+
+static int dnetmap_stat_proc_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, dnetmap_stat_proc_show, PDE_DATA(inode));
+}
+
+static const struct file_operations dnetmap_stat_proc_fops = {
+	.open    = dnetmap_stat_proc_open,
+	.read    = seq_read,
+	.llseek  = seq_lseek,
+	.release = single_release,
+};
 
 static int __net_init dnetmap_proc_net_init(struct net *net)
 {
