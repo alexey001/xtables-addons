@@ -26,6 +26,7 @@
 #include <linux/netfilter.h>
 #include <linux/netfilter_ipv4.h>
 #include <linux/netfilter/x_tables.h>
+#include <linux/uidgid.h>
 #include <linux/version.h>
 #include <net/net_namespace.h>
 #include <net/netns/generic.h>
@@ -328,8 +329,8 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 		ret = -ENOMEM;
 		goto out;
 	}
-	pde_data->uid = proc_uid;
-	pde_data->gid = proc_gid;
+	pde_data->uid = make_kuid(&init_user_ns, proc_uid);
+	pde_data->gid = make_kgid(&init_user_ns, proc_gid);
 
 	/* statistics */
 	pde_stat = create_proc_entry(p->proc_str_stat, proc_perms,
@@ -341,8 +342,8 @@ static int dnetmap_tg_check(const struct xt_tgchk_param *par)
 	}
 	pde_stat->data = p;
 	pde_stat->read_proc = dnetmap_stat_proc_read;
-	pde_stat->uid = proc_uid;
-	pde_stat->gid = proc_gid;
+	pde_stat->uid = make_kuid(&init_user_ns, proc_uid);
+	pde_stat->gid = make_kgid(&init_user_ns, proc_gid);
 #endif
 
 	spin_lock_bh(&dnetmap_lock);

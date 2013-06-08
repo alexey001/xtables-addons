@@ -16,6 +16,7 @@
 #include <linux/proc_fs.h>
 #include <linux/skbuff.h>
 #include <linux/spinlock.h>
+#include <linux/uidgid.h>
 #include <linux/version.h>
 #include <asm/atomic.h>
 
@@ -131,8 +132,8 @@ q2_get_counter(const struct xt_quota_mtinfo2 *q)
 	p->data         = e;
 	p->read_proc    = quota_proc_read;
 	p->write_proc   = quota_proc_write;
-	p->uid          = quota_list_uid;
-	p->gid          = quota_list_gid;
+	p->uid          = make_kuid(&init_user_ns, quota_list_uid);
+	p->gid          = make_kgid(&init_user_ns, quota_list_gid);
 	list_add_tail(&e->list, &counter_list);
 	spin_unlock_bh(&counter_list_lock);
 	return e;

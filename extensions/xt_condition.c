@@ -155,8 +155,8 @@ static int condition_mt_check(const struct xt_mtchk_param *par)
 	var->status_proc->read_proc  = condition_proc_read;
 	var->status_proc->write_proc = condition_proc_write;
 	list_add(&var->list, &conditions_list);
-	var->status_proc->uid = condition_uid_perms;
-	var->status_proc->gid = condition_gid_perms;
+	var->status_proc->uid = make_kuid(&init_user_ns, condition_uid_perms);
+	var->status_proc->gid = make_kgid(&init_user_ns, condition_gid_perms);
 	mutex_unlock(&proc_lock);
 	info->condvar = var;
 	return 0;
