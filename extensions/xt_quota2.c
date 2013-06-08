@@ -14,6 +14,7 @@
 #include <linux/list.h>
 #include <linux/module.h>
 #include <linux/proc_fs.h>
+#include <linux/seq_file.h>
 #include <linux/skbuff.h>
 #include <linux/spinlock.h>
 #include <linux/uidgid.h>
@@ -47,22 +48,27 @@ module_param_named(perms, quota_list_perms, uint, S_IRUGO | S_IWUSR);
 module_param_named(uid, quota_list_uid, uint, S_IRUGO | S_IWUSR);
 module_param_named(gid, quota_list_gid, uint, S_IRUGO | S_IWUSR);
 
-static int quota_proc_read(char *page, char **start, off_t offset,
-                           int count, int *eof, void *data)
+static int quota_proc_show(struct seq_file *m, void *data)
 {
-	struct xt_quota_counter *e = data;
+	struct xt_quota_counter *e = m->private;
 	int ret;
 
 	spin_lock_bh(&e->lock);
-	ret = snprintf(page, PAGE_SIZE, "%llu\n", e->quota);
+	ret = seq_printf(m, "%llu\n", e->quota);
 	spin_unlock_bh(&e->lock);
 	return ret;
 }
 
-static int quota_proc_write(struct file *file, const char __user *input,
-                            unsigned long size, void *data)
+static int quota_proc_open(struct inode *inode, struct file *file)
 {
-	struct xt_quota_counter *e = data;
+	return single_open(file, quota_proc_show, PDE_DATA(inode));
+}
+
+static ssize_t
+quota_proc_write(struct file *file, const char __user *input,
+                 size_t size, loff_t *loff)
+{
+	struct xt_quota_counter *e = PDE_DATA(file_inode(file));
 	char buf[sizeof("18446744073709551616")];
 
 	if (size > sizeof(buf))
@@ -76,6 +82,14 @@ static int quota_proc_write(struct file *file, const char __user *input,
 	spin_unlock_bh(&e->lock);
 	return size;
 }
+
+static const struct file_operations quota_proc_fops = {
+	.open    = quota_proc_open,
+	.read    = seq_read,
+	.llseek  = seq_lseek,
+	.write   = quota_proc_write,
+	.release = single_release,
+};
 
 static struct xt_quota_counter *
 q2_new_counter(const struct xt_quota_mtinfo2 *q, bool anon)
@@ -124,16 +138,14 @@ q2_get_counter(const struct xt_quota_mtinfo2 *q)
 	if (e == NULL)
 		goto out;
 
-	p = e->procfs_entry = create_proc_entry(e->name, quota_list_perms,
-	                      proc_xt_quota);
+	p = proc_create_data(e->name, quota_list_perms, proc_xt_quota,
+	                     &quota_proc_fops, e);
 	if (p == NULL || IS_ERR(p))
 		goto out;
 
-	p->data         = e;
-	p->read_proc    = quota_proc_read;
-	p->write_proc   = quota_proc_write;
-	p->uid          = make_kuid(&init_user_ns, quota_list_uid);
-	p->gid          = make_kgid(&init_user_ns, quota_list_gid);
+	e->procfs_entry = p;
+	proc_set_user(p, make_kuid(&init_user_ns, quota_list_uid),
+	              make_kgid(&init_user_ns, quota_list_gid));
 	list_add_tail(&e->list, &counter_list);
 	spin_unlock_bh(&counter_list_lock);
 	return e;
