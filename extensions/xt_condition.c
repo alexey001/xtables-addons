@@ -52,6 +52,7 @@ struct condition_variable {
 	struct proc_dir_entry *status_proc;
 	unsigned int refcount;
 	bool enabled;
+	char name[sizeof(((struct xt_condition_mtinfo *)NULL)->name)];
 };
 
 /* proc_lock is a user context only semaphore used for write access */
@@ -61,22 +62,23 @@ static DEFINE_MUTEX(proc_lock);
 static LIST_HEAD(conditions_list);
 static struct proc_dir_entry *proc_net_condition;
 
-static int condition_proc_read(char __user *buffer, char **start, off_t offset,
-                               int length, int *eof, void *data)
+static int condition_proc_show(struct seq_file *m, void *data)
 {
-	const struct condition_variable *var = data;
+	const struct condition_variable *var = m->private;
 
-	buffer[0] = var->enabled ? '1' : '0';
-	buffer[1] = '\n';
-	if (length >= 2)
-		*eof = true;
-	return 2;
+	return seq_printf(m, var->enabled ? "1\n" : "0\n");
 }
 
-static int condition_proc_write(struct file *file, const char __user *buffer,
-                                unsigned long length, void *data)
+static int condition_proc_open(struct inode *inode, struct file *file)
 {
-	struct condition_variable *var = data;
+	return single_open(file, condition_proc_show, PDE_DATA(inode));
+}
+
+static ssize_t
+condition_proc_write(struct file *file, const char __user *buffer,
+                     size_t length, loff_t *loff)
+{
+	struct condition_variable *var = PDE_DATA(file_inode(file));
 	char newval;
 
 	if (length > 0) {
@@ -94,6 +96,14 @@ static int condition_proc_write(struct file *file, const char __user *buffer,
 	}
 	return length;
 }
+
+static const struct file_operations condition_proc_fops = {
+	.open    = condition_proc_open,
+	.read    = seq_read,
+	.llseek  = seq_lseek,
+	.write   = condition_proc_write,
+	.release = single_release,
+};
 
 static bool
 condition_mt(const struct sk_buff *skb, struct xt_action_param *par)
@@ -124,7 +134,7 @@ static int condition_mt_check(const struct xt_mtchk_param *par)
 	 */
 	mutex_lock(&proc_lock);
 	list_for_each_entry(var, &conditions_list, list) {
-		if (strcmp(info->name, var->status_proc->name) == 0) {
+		if (strcmp(info->name, var->name) == 0) {
 			var->refcount++;
 			mutex_unlock(&proc_lock);
 			info->condvar = var;
@@ -139,24 +149,23 @@ static int condition_mt_check(const struct xt_mtchk_param *par)
 		return -ENOMEM;
 	}
 
+	memcpy(var->name, info->name, sizeof(info->name));
 	/* Create the condition variable's proc file entry. */
-	var->status_proc = create_proc_entry(info->name, condition_list_perms,
-	                   proc_net_condition);
+	var->status_proc = proc_create_data(info->name, condition_list_perms,
+	                   proc_net_condition, &condition_proc_fops, var);
 	if (var->status_proc == NULL) {
 		kfree(var);
 		mutex_unlock(&proc_lock);
 		return -ENOMEM;
 	}
 
+	proc_set_user(var->status_proc,
+	              make_kuid(&init_user_ns, condition_uid_perms),
+	              make_kgid(&init_user_ns, condition_gid_perms));
 	var->refcount = 1;
 	var->enabled  = false;
-	var->status_proc->data  = var;
 	wmb();
-	var->status_proc->read_proc  = condition_proc_read;
-	var->status_proc->write_proc = condition_proc_write;
 	list_add(&var->list, &conditions_list);
-	var->status_proc->uid = make_kuid(&init_user_ns, condition_uid_perms);
-	var->status_proc->gid = make_kgid(&init_user_ns, condition_gid_perms);
 	mutex_unlock(&proc_lock);
 	info->condvar = var;
 	return 0;
@@ -170,7 +179,7 @@ static void condition_mt_destroy(const struct xt_mtdtor_param *par)
 	mutex_lock(&proc_lock);
 	if (--var->refcount == 0) {
 		list_del(&var->list);
-		remove_proc_entry(var->status_proc->name, proc_net_condition);
+		proc_remove(var->status_proc);
 		mutex_unlock(&proc_lock);
 		kfree(var);
 		return;
