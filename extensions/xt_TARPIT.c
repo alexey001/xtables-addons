@@ -79,7 +79,7 @@ static bool xttarpit_tarpit(struct tcphdr *tcph, const struct tcphdr *oth)
 #if 0
 	/* Rate-limit replies to !SYN,ACKs */
 	if (!oth->syn && oth->ack)
-		if (!xrlim_allow(rt_dst(ort), HZ))
+		if (!xrlim_allow(&ort->dst, HZ))
 			return false;
 #endif
 

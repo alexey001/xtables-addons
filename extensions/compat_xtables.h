@@ -24,8 +24,6 @@
 #define ipt_unregister_table(tbl) ipt_unregister_table(&init_net, (tbl))
 #define ip6t_unregister_table(tbl) ip6t_unregister_table(&init_net, (tbl))
 
-#define rt_dst(rt)	(&(rt)->dst)
-
 #if !defined(NIP6) && !defined(NIP6_FMT)
 #	define NIP6(addr) \
 		ntohs((addr).s6_addr16[0]), \
