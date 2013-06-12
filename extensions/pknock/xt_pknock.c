@@ -190,8 +190,7 @@ status_itoa(enum status status)
 static void *
 pknock_seq_start(struct seq_file *s, loff_t *pos)
 {
-	const struct proc_dir_entry *pde = s->private;
-	const struct xt_pknock_rule *rule = pde->data;
+	const struct xt_pknock_rule *rule = s->private;
 
 	spin_lock_bh(&list_lock);
 
@@ -210,8 +209,7 @@ pknock_seq_start(struct seq_file *s, loff_t *pos)
 static void *
 pknock_seq_next(struct seq_file *s, void *v, loff_t *pos)
 {
-	const struct proc_dir_entry *pde = s->private;
-	const struct xt_pknock_rule *rule = pde->data;
+	const struct xt_pknock_rule *rule = s->private;
 
 	++*pos;
 	if (*pos >= peer_hashsize)
@@ -243,8 +241,7 @@ pknock_seq_show(struct seq_file *s, void *v)
 	unsigned long time;
 	const struct list_head *peer_head = v;
 
-	const struct proc_dir_entry *pde = s->private;
-	const struct xt_pknock_rule *rule = pde->data;
+	const struct xt_pknock_rule *rule = s->private;
 
 	list_for_each_safe(pos, n, peer_head) {
 		peer = list_entry(pos, struct peer, head);
@@ -295,7 +292,7 @@ pknock_proc_open(struct inode *inode, struct file *file)
 	int ret = seq_open(file, &pknock_seq_ops);
 	if (ret == 0) {
 		struct seq_file *sf = file->private_data;
-		sf->private = PDE(inode);
+		sf->private = PDE_DATA(inode);
 	}
 	return ret;
 }
@@ -478,12 +475,10 @@ add_rule(struct xt_pknock_mtinfo *info)
 	rule->timer.function	= peer_gc;
 	rule->timer.data	= (unsigned long)rule;
 
-	rule->status_proc = create_proc_entry(info->rule_name, 0, pde);
+	rule->status_proc = proc_create_data(info->rule_name, 0, pde,
+	                    &pknock_proc_ops, rule);
 	if (rule->status_proc == NULL)
 		goto out;
-
-	rule->status_proc->proc_fops = &pknock_proc_ops;
-	rule->status_proc->data = rule;
 
 	list_add(&rule->head, &rule_hashtable[hash]);
 	pr_debug("(A) rule_name: %s - created.\n", rule->rule_name);
