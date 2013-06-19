@@ -11,9 +11,6 @@ FORCE:
 xtables-addons.8: FORCE
 	${MAKE} -f Makefile.mans all;
 
-install-exec-hook:
-	depmod -a || :;
-
 clean-local-mans:
 	${MAKE} -f Makefile.mans clean;
 
