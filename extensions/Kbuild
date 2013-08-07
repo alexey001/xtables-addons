@@ -15,10 +15,6 @@ obj-${build_ECHO}        += xt_ECHO.o
 endif
 obj-${build_IPMARK}      += xt_IPMARK.o
 obj-${build_LOGMARK}     += xt_LOGMARK.o
-obj-${build_RAWNAT}      += xt_RAWNAT.o iptable_rawpost.o
-ifneq (${CONFIG_IP6_NF_IPTABLES},)
-obj-${build_RAWNAT}      += ip6table_rawpost.o
-endif
 obj-${build_SYSRQ}       += xt_SYSRQ.o
 obj-${build_TARPIT}      += xt_TARPIT.o
 obj-${build_condition}   += xt_condition.o

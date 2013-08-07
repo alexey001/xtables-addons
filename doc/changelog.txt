@@ -1,6 +1,8 @@
 
 HEAD
 ====
+Changes
+- remove unmaintained RAWSNAT/RAWDNAT code
 
 
 v2.3 (2013-06-18)
