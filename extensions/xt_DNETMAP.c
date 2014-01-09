@@ -608,7 +608,6 @@ dnetmap_tg_proc_write(struct file *file, const char __user *input,size_t size, l
 	char buf[sizeof("+192.168.100.100:200.200.200.200")];
 	const char *c = buf;
 	const char *c2;
-	//union nf_inet_addr addr = {};
 	__be32 addr1,addr2;
 	bool add;
 	char str[25];
