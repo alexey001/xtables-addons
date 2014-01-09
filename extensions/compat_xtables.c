@@ -110,12 +110,6 @@ int xtnu_ip_route_me_harder(struct sk_buff **pskb, unsigned int addr_type)
 }
 EXPORT_SYMBOL_GPL(xtnu_ip_route_me_harder);
 
-int xtnu_skb_make_writable(struct sk_buff **pskb, unsigned int len)
-{
-	return skb_make_writable(*pskb, len);
-}
-EXPORT_SYMBOL_GPL(xtnu_skb_make_writable);
-
 void *HX_memmem(const void *space, size_t spacesize,
     const void *point, size_t pointsize)
 {

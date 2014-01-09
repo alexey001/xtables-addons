@@ -97,7 +97,7 @@ dhcpmac_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 	struct sk_buff *skb = *pskb;
 	unsigned int i;
 
-	if (!skb_make_writable(pskb, 0))
+	if (!skb_make_writable(skb, 0))
 		return NF_DROP;
 
 	udph = skb_header_pointer(skb, ip_hdrlen(skb),
