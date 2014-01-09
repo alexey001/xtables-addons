@@ -1,8 +1,11 @@
 
 HEAD
 ====
-Changes
+Enhancements:
+- Support for Linux 3.13
+Changes:
 - remove unmaintained RAWSNAT/RAWDNAT code
+- remove unused parts of compat_xtables that served Linux <3.7
 
 
 v2.3 (2013-06-18)
