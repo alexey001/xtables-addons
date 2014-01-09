@@ -70,8 +70,6 @@ extern int xtnu_register_target(struct xtnu_target *);
 extern void xtnu_unregister_target(struct xtnu_target *);
 extern int xtnu_register_targets(struct xtnu_target *, unsigned int);
 extern void xtnu_unregister_targets(struct xtnu_target *, unsigned int);
-extern struct xt_match *xtnu_request_find_match(unsigned int,
-	const char *, uint8_t);
 extern void xtnu_proto_csum_replace4(__u16 __bitwise *, struct sk_buff *,
 	__be32, __be32, bool);
 extern int xtnu_ipv6_skip_exthdr(const struct sk_buff *, int,

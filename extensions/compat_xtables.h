@@ -53,8 +53,6 @@
 #define xt_register_targets   xtnu_register_targets
 #define xt_unregister_targets xtnu_unregister_targets
 
-#define xt_request_find_match xtnu_request_find_match
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 9, 0)
 static inline struct inode *file_inode(struct file *f)
 {

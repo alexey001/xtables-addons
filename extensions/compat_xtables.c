@@ -104,30 +104,6 @@ void xtnu_unregister_targets(struct xtnu_target *nt, unsigned int num)
 }
 EXPORT_SYMBOL_GPL(xtnu_unregister_targets);
 
-struct xt_match *xtnu_request_find_match(unsigned int af, const char *name,
-    uint8_t revision)
-{
-	static const char *const xt_prefix[] = {
-		[AF_UNSPEC] = "x",
-		[AF_INET]   = "ip",
-		[AF_INET6]  = "ip6",
-#ifdef AF_ARP
-		[AF_ARP]    = "arp",
-#elif defined(NF_ARP) && NF_ARP != AF_UNSPEC
-		[NF_ARP]    = "arp",
-#endif
-	};
-	struct xt_match *match;
-
-	match = try_then_request_module(xt_find_match(af, name, revision),
-		"%st_%s", xt_prefix[af], name);
-	if (IS_ERR(match) || match == NULL)
-		return NULL;
-
-	return match;
-}
-EXPORT_SYMBOL_GPL(xtnu_request_find_match);
-
 int xtnu_ip_route_me_harder(struct sk_buff **pskb, unsigned int addr_type)
 {
 	return ip_route_me_harder(*pskb, addr_type);
