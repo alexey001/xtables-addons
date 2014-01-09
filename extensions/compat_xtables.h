@@ -45,7 +45,6 @@
 #	define NIPQUAD_FMT "%u.%u.%u.%u"
 #endif
 
-#define ip_route_me_harder    xtnu_ip_route_me_harder
 #define xt_target             xtnu_target
 #define xt_register_target    xtnu_register_target
 #define xt_unregister_target  xtnu_unregister_target

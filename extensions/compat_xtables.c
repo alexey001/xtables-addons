@@ -104,12 +104,6 @@ void xtnu_unregister_targets(struct xtnu_target *nt, unsigned int num)
 }
 EXPORT_SYMBOL_GPL(xtnu_unregister_targets);
 
-int xtnu_ip_route_me_harder(struct sk_buff **pskb, unsigned int addr_type)
-{
-	return ip_route_me_harder(*pskb, addr_type);
-}
-EXPORT_SYMBOL_GPL(xtnu_ip_route_me_harder);
-
 void *HX_memmem(const void *space, size_t spacesize,
     const void *point, size_t pointsize)
 {

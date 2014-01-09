@@ -256,7 +256,7 @@ static void tarpit_tcp4(struct sk_buff *oldskb, unsigned int hook,
 #endif
 		addr_type = RTN_LOCAL;
 
-	if (ip_route_me_harder(&nskb, addr_type))
+	if (ip_route_me_harder(nskb, addr_type))
 		goto free_nskb;
 	else
 		niph = ip_hdr(nskb);
