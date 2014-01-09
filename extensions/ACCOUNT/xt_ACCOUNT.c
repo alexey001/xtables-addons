@@ -474,14 +474,15 @@ static void ipt_acc_depth2_insert(struct ipt_acc_mask_8 *mask_8,
 	}
 }
 
-static unsigned int ipt_acc_target(struct sk_buff **pskb, const struct xt_action_param *par)
+static unsigned int
+ipt_acc_target(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct ipt_acc_info *info =
 		par->targinfo;
 
-	__be32 src_ip = ip_hdr(*pskb)->saddr;
-	__be32 dst_ip = ip_hdr(*pskb)->daddr;
-	uint32_t size = ntohs(ip_hdr(*pskb)->tot_len);
+	__be32 src_ip = ip_hdr(skb)->saddr;
+	__be32 dst_ip = ip_hdr(skb)->daddr;
+	uint32_t size = ntohs(ip_hdr(skb)->tot_len);
 
 	spin_lock_bh(&ipt_acc_lock);
 

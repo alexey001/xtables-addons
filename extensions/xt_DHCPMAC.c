@@ -89,12 +89,11 @@ dhcpmac_mt(const struct sk_buff *skb, struct xt_action_param *par)
 }
 
 static unsigned int
-dhcpmac_tg(struct sk_buff **pskb, const struct xt_action_param *par)
+dhcpmac_tg(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct dhcpmac_info *info = par->targinfo;
 	struct dhcp_message dhcpbuf, *dh;
 	struct udphdr udpbuf, *udph;
-	struct sk_buff *skb = *pskb;
 	unsigned int i;
 
 	if (!skb_make_writable(skb, 0))

@@ -189,9 +189,8 @@ static unsigned int sysrq_tg(const void *pdata, uint16_t len)
 #endif
 
 static unsigned int
-sysrq_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
+sysrq_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 {
-	struct sk_buff *skb = *pskb;
 	const struct iphdr *iph;
 	const struct udphdr *udph;
 	uint16_t len;
@@ -220,9 +219,8 @@ sysrq_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
 
 #ifdef WITH_IPV6
 static unsigned int
-sysrq_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
+sysrq_tg6(struct sk_buff *skb, const struct xt_action_param *par)
 {
-	struct sk_buff *skb = *pskb;
 	const struct ipv6hdr *iph;
 	const struct udphdr *udph;
 	unsigned short frag_off;

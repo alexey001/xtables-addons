@@ -42,12 +42,6 @@
 #	define NIPQUAD_FMT "%u.%u.%u.%u"
 #endif
 
-#define xt_target             xtnu_target
-#define xt_register_target    xtnu_register_target
-#define xt_unregister_target  xtnu_unregister_target
-#define xt_register_targets   xtnu_register_targets
-#define xt_unregister_targets xtnu_unregister_targets
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 9, 0)
 static inline struct inode *file_inode(struct file *f)
 {

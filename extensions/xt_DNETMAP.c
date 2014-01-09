@@ -353,9 +353,8 @@ out:
 }
 
 static unsigned int
-dnetmap_tg(struct sk_buff **pskb, const struct xt_action_param *par)
+dnetmap_tg(struct sk_buff *skb, const struct xt_action_param *par)
 {
-	struct sk_buff *skb = *pskb;
 	struct net *net = dev_net(par->in ? par->in : par->out);
 	struct dnetmap_net *dnetmap_net = dnetmap_pernet(net);
 	struct nf_conn *ct;

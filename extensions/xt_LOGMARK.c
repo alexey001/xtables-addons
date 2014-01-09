@@ -63,9 +63,8 @@ static void logmark_ct(const struct nf_conn *ct, enum ip_conntrack_info ctinfo)
 }
 
 static unsigned int
-logmark_tg(struct sk_buff **pskb, const struct xt_action_param *par)
+logmark_tg(struct sk_buff *skb, const struct xt_action_param *par)
 {
-	const struct sk_buff *skb = *pskb;
 	const struct xt_logmark_tginfo *info = par->targinfo;
 	const struct nf_conn *ct;
 	enum ip_conntrack_info ctinfo;

@@ -404,9 +404,8 @@ static void tarpit_tcp6(struct sk_buff *oldskb, unsigned int hook,
 #endif
 
 static unsigned int
-tarpit_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
+tarpit_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 {
-	const struct sk_buff *skb = *pskb;
 	const struct iphdr *iph = ip_hdr(skb);
 	const struct rtable *rt = skb_rtable(skb);
 	const struct xt_tarpit_tginfo *info = par->targinfo;
@@ -435,15 +434,14 @@ tarpit_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
 	if (iph->frag_off & htons(IP_OFFSET))
 		return NF_DROP;
 
-	tarpit_tcp4(*pskb, par->hooknum, info->variant);
+	tarpit_tcp4(skb, par->hooknum, info->variant);
 	return NF_DROP;
 }
 
 #ifdef WITH_IPV6
 static unsigned int
-tarpit_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
+tarpit_tg6(struct sk_buff *skb, const struct xt_action_param *par)
 {
-	const struct sk_buff *skb = *pskb;
 	const struct ipv6hdr *iph = ipv6_hdr(skb);
 	const struct rt6_info *rt = (struct rt6_info *)skb_dst(skb);
 	const struct xt_tarpit_tginfo *info = par->targinfo;
@@ -478,7 +476,7 @@ tarpit_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
 		return NF_DROP;
 	}
 
-	tarpit_tcp6(*pskb, par->hooknum, info->variant);
+	tarpit_tcp6(skb, par->hooknum, info->variant);
 	return NF_DROP;
 }
 #endif

@@ -25,10 +25,9 @@ MODULE_ALIAS("ipt_IPMARK");
 MODULE_ALIAS("ip6t_IPMARK");
 
 static unsigned int
-ipmark_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
+ipmark_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct xt_ipmark_tginfo *ipmarkinfo = par->targinfo;
-	const struct sk_buff *skb = *pskb;
 	const struct iphdr *iph = ip_hdr(skb);
 	__u32 mark;
 
@@ -61,10 +60,9 @@ static __u32 ipmark_from_ip6(const struct in6_addr *a, unsigned int s)
 }
 
 static unsigned int
-ipmark_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
+ipmark_tg6(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct xt_ipmark_tginfo *info = par->targinfo;
-	const struct sk_buff *skb = *pskb;
 	const struct ipv6hdr *iph = ipv6_hdr(skb);
 	__u32 mark;
 

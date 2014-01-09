@@ -85,7 +85,7 @@ xt_chaos_total(struct sk_buff *skb, const struct xt_action_param *par)
 }
 
 static unsigned int
-chaos_tg(struct sk_buff **pskb, const struct xt_action_param *par)
+chaos_tg(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	/*
 	 * Equivalent to:
@@ -96,7 +96,6 @@ chaos_tg(struct sk_buff **pskb, const struct xt_action_param *par)
 	 * -A chaos -j DROP;
 	 */
 	const struct xt_chaos_tginfo *info = par->targinfo;
-	struct sk_buff *skb = *pskb;
 	const struct iphdr *iph = ip_hdr(skb);
 
 	if ((unsigned int)net_random() <= reject_percentage) {

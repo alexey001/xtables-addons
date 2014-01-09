@@ -24,9 +24,8 @@
 #include "compat_xtables.h"
 
 static unsigned int
-echo_tg6(struct sk_buff **poldskb, const struct xt_action_param *par)
+echo_tg6(struct sk_buff *oldskb, const struct xt_action_param *par)
 {
-	const struct sk_buff *oldskb = *poldskb;
 	const struct udphdr *oldudp;
 	const struct ipv6hdr *oldip;
 	struct udphdr *newudp, oldudp_buf;
@@ -39,7 +38,7 @@ echo_tg6(struct sk_buff **poldskb, const struct xt_action_param *par)
 	struct net *net = dev_net((par->in != NULL) ? par->in : par->out);
 
 	/* This allows us to do the copy operation in fewer lines of code. */
-	if (skb_linearize(*poldskb) < 0)
+	if (skb_linearize(oldskb) < 0)
 		return NF_DROP;
 
 	oldip  = ipv6_hdr(oldskb);
@@ -112,7 +111,7 @@ echo_tg6(struct sk_buff **poldskb, const struct xt_action_param *par)
 	if (newskb->len > dst_mtu(skb_dst(newskb)))
 		goto free_nskb;
 
-	nf_ct_attach(newskb, *poldskb);
+	nf_ct_attach(newskb, oldskb);
 	ip6_local_out(newskb);
 	return NF_DROP;
 
@@ -122,9 +121,8 @@ echo_tg6(struct sk_buff **poldskb, const struct xt_action_param *par)
 }
 
 static unsigned int
-echo_tg4(struct sk_buff **poldskb, const struct xt_action_param *par)
+echo_tg4(struct sk_buff *oldskb, const struct xt_action_param *par)
 {
-	const struct sk_buff *oldskb = *poldskb;
 	const struct udphdr *oldudp;
 	const struct iphdr *oldip;
 	struct udphdr *newudp, oldudp_buf;
@@ -134,7 +132,7 @@ echo_tg4(struct sk_buff **poldskb, const struct xt_action_param *par)
 	void *payload;
 
 	/* This allows us to do the copy operation in fewer lines of code. */
-	if (skb_linearize(*poldskb) < 0)
+	if (skb_linearize(oldskb) < 0)
 		return NF_DROP;
 
 	oldip  = ip_hdr(oldskb);
@@ -202,7 +200,7 @@ echo_tg4(struct sk_buff **poldskb, const struct xt_action_param *par)
 	if (newskb->len > dst_mtu(skb_dst(newskb)))
 		goto free_nskb;
 
-	nf_ct_attach(newskb, *poldskb);
+	nf_ct_attach(newskb, oldskb);
 	ip_local_out(newskb);
 	return NF_DROP;
 
