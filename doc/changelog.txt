@@ -10,6 +10,9 @@ Enhancements:
 Changes:
 - remove unmaintained RAWSNAT/RAWDNAT code
 - remove unused parts of compat_xtables that served Linux <3.7
+Fixes:
+- xt_quota2: --no-change should not alter quota to zero ever
+- xt_quota2: --packet should not be set to zero based on skb->len
 
 
 v2.3 (2013-06-18)
