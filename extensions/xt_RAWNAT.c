@@ -144,58 +144,58 @@ static unsigned int rawnat4_writable_part(const struct iphdr *iph)
 }
 
 static unsigned int
-rawsnat_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
+rawsnat_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct xt_rawnat_tginfo *info = par->targinfo;
 	struct iphdr *iph;
 	__be32 new_addr;
 
-	iph = ip_hdr(*pskb);
+	iph = ip_hdr(skb);
 	new_addr = remask(iph->saddr, info->addr.ip, info->mask);
 	if (iph->saddr == new_addr)
 		return XT_CONTINUE;
 
-	if (!skb_make_writable(pskb, rawnat4_writable_part(iph)))
+	if (!skb_make_writable(skb, rawnat4_writable_part(iph)))
 		return NF_DROP;
 
-	iph = ip_hdr(*pskb);
+	iph = ip_hdr(skb);
 	csum_replace4(&iph->check, iph->saddr, new_addr);
-	rawnat4_update_l4(*pskb, iph->saddr, new_addr);
+	rawnat4_update_l4(skb, iph->saddr, new_addr);
 	iph->saddr = new_addr;
 	return XT_CONTINUE;
 }
 
 static unsigned int
-rawdnat_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
+rawdnat_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct xt_rawnat_tginfo *info = par->targinfo;
 	struct iphdr *iph;
 	__be32 new_addr;
 
-	iph = ip_hdr(*pskb);
+	iph = ip_hdr(skb);
 	new_addr = remask(iph->daddr, info->addr.ip, info->mask);
 	if (iph->daddr == new_addr)
 		return XT_CONTINUE;
 
-	if (!skb_make_writable(pskb, rawnat4_writable_part(iph)))
+	if (!skb_make_writable(skb, rawnat4_writable_part(iph)))
 		return NF_DROP;
 
-	iph = ip_hdr(*pskb);
+	iph = ip_hdr(skb);
 	
 	csum_replace4(&iph->check, iph->daddr, new_addr);
-	rawnat4_update_l4(*pskb, iph->daddr, new_addr);
+	rawnat4_update_l4(skb, iph->daddr, new_addr);
 	//printk("test ip: %ld\n", iph->daddr);
 	iph->daddr = new_addr;
 	return XT_CONTINUE;
 }
 
 static unsigned int
-tabsnat_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
+tabsnat_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	struct iphdr *iph;
 	__be32 new_addr;
 
-	iph = ip_hdr(*pskb);
+	iph = ip_hdr(skb);
 	
 	new_addr = tabsnat[iph->saddr >> 16];
 
@@ -205,23 +205,23 @@ tabsnat_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
 	if (iph->saddr == new_addr)
 		return XT_CONTINUE;
 
-	if (!skb_make_writable(pskb, rawnat4_writable_part(iph)))
+	if (!skb_make_writable(skb, rawnat4_writable_part(iph)))
 		return NF_DROP;
 
-	iph = ip_hdr(*pskb);
+	iph = ip_hdr(skb);
 	csum_replace4(&iph->check, iph->saddr, new_addr);
-	rawnat4_update_l4(*pskb, iph->saddr, new_addr);
+	rawnat4_update_l4(skb, iph->saddr, new_addr);
 	iph->saddr = new_addr;
 	return XT_CONTINUE;
 }
 
 static unsigned int
-tabdnat_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
+tabdnat_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	struct iphdr *iph;
 	__be32 new_addr;
 
-	iph = ip_hdr(*pskb);
+	iph = ip_hdr(skb);
 	new_addr = tabdnat[iph->daddr >> 16];
 
 	if (new_addr == 0)
@@ -230,27 +230,26 @@ tabdnat_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
 	if (iph->daddr == new_addr)
 		return XT_CONTINUE;
 
-	if (!skb_make_writable(pskb, rawnat4_writable_part(iph)))
+	if (!skb_make_writable(skb, rawnat4_writable_part(iph)))
 		return NF_DROP;
 
-	iph = ip_hdr(*pskb);
+	iph = ip_hdr(skb);
 	
 	csum_replace4(&iph->check, iph->daddr, new_addr);
-	rawnat4_update_l4(*pskb, iph->daddr, new_addr);
+	rawnat4_update_l4(skb, iph->daddr, new_addr);
 	//printk("test ip: %ld\n", iph->daddr);
 	iph->daddr = new_addr;
 	return XT_CONTINUE;
 }
 
 static unsigned int
-tabclas_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
+tabclas_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	struct iphdr *iph;
 	const struct xt_rawnat_tginfo *info = par->targinfo;
 	__be32 priority;
-	struct sk_buff *skb = *pskb;
 
-	iph = ip_hdr(*pskb);
+	iph = ip_hdr(skb);
 	
 	if (info->match == 0)
 		priority = tabclas[info->table - 3][iph->daddr >> 16];
@@ -267,7 +266,7 @@ tabclas_tg4(struct sk_buff **pskb, const struct xt_action_param *par)
 
 
 #ifdef WITH_IPV6
-static bool rawnat6_prepare_l4(struct sk_buff **pskb, unsigned int *l4offset,
+static bool rawnat6_prepare_l4(struct sk_buff *skb, unsigned int *l4offset,
     unsigned int *l4proto)
 {
 	static const unsigned int types[] =
@@ -289,12 +288,12 @@ static bool rawnat6_prepare_l4(struct sk_buff **pskb, unsigned int *l4offset,
 
 	switch (*l4proto) {
 	case IPPROTO_TCP:
-		if (!skb_make_writable(pskb, *l4offset + sizeof(struct tcphdr)))
+		if (!skb_make_writable(skb, *l4offset + sizeof(struct tcphdr)))
 			return false;
 		break;
 	case IPPROTO_UDP:
 	case IPPROTO_UDPLITE:
-		if (!skb_make_writable(pskb, *l4offset + sizeof(struct udphdr)))
+		if (!skb_make_writable(skb, *l4offset + sizeof(struct udphdr)))
 			return false;
 		break;
 	}
@@ -339,43 +338,43 @@ static void rawnat6_update_l4(struct sk_buff *skb, unsigned int l4proto,
 }
 
 static unsigned int
-rawsnat_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
+rawsnat_tg6(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct xt_rawnat_tginfo *info = par->targinfo;
 	unsigned int l4offset, l4proto;
 	struct ipv6hdr *iph;
 	struct in6_addr new_addr;
 
-	iph = ipv6_hdr(*pskb);
+	iph = ipv6_hdr(skb);
 	memcpy(&new_addr, &iph->saddr, sizeof(new_addr));
 	rawnat_ipv6_mask(new_addr.s6_addr32, info->addr.ip6, info->mask);
 	if (ipv6_addr_cmp(&iph->saddr, &new_addr) == 0)
 		return XT_CONTINUE;
 	if (!rawnat6_prepare_l4(pskb, &l4offset, &l4proto))
 		return NF_DROP;
-	iph = ipv6_hdr(*pskb);
-	rawnat6_update_l4(*pskb, l4proto, l4offset, &iph->saddr, &new_addr);
+	iph = ipv6_hdr(skb);
+	rawnat6_update_l4(skb, l4proto, l4offset, &iph->saddr, &new_addr);
 	memcpy(&iph->saddr, &new_addr, sizeof(new_addr));
 	return XT_CONTINUE;
 }
 
 static unsigned int
-rawdnat_tg6(struct sk_buff **pskb, const struct xt_action_param *par)
+rawdnat_tg6(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct xt_rawnat_tginfo *info = par->targinfo;
 	unsigned int l4offset, l4proto;
 	struct ipv6hdr *iph;
 	struct in6_addr new_addr;
 
-	iph = ipv6_hdr(*pskb);
+	iph = ipv6_hdr(skb);
 	memcpy(&new_addr, &iph->daddr, sizeof(new_addr));
 	rawnat_ipv6_mask(new_addr.s6_addr32, info->addr.ip6, info->mask);
 	if (ipv6_addr_cmp(&iph->daddr, &new_addr) == 0)
 		return XT_CONTINUE;
 	if (!rawnat6_prepare_l4(pskb, &l4offset, &l4proto))
 		return NF_DROP;
-	iph = ipv6_hdr(*pskb);
-	rawnat6_update_l4(*pskb, l4proto, l4offset, &iph->daddr, &new_addr);
+	iph = ipv6_hdr(skb);
+	rawnat6_update_l4(skb, l4proto, l4offset, &iph->daddr, &new_addr);
 	memcpy(&iph->daddr, &new_addr, sizeof(new_addr));
 	return XT_CONTINUE;
 }

@@ -10,6 +10,7 @@ build_IPMARK=m
 build_LOGMARK=m
 build_SYSRQ=m
 build_TARPIT=m
+build_RAWNAT=m
 build_condition=m
 build_fuzzy=m
 build_geoip=m

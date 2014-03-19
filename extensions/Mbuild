@@ -10,6 +10,7 @@ obj-${build_IPMARK}      += libxt_IPMARK.so
 obj-${build_LOGMARK}     += libxt_LOGMARK.so
 obj-${build_SYSRQ}       += libxt_SYSRQ.so
 obj-${build_TARPIT}      += libxt_TARPIT.so
+obj-${build_RAWNAT}      += libxt_RAWDNAT.so libxt_RAWSNAT.so libxt_TABDNAT.so libxt_TABSNAT.so libxt_TABCLAS.so
 obj-${build_condition}   += libxt_condition.so
 obj-${build_fuzzy}       += libxt_fuzzy.so
 obj-${build_geoip}       += libxt_geoip.so
