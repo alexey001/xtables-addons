@@ -24,6 +24,7 @@ enum {
 static const struct option tabclas_tg_opts[] = {
 	{.name = "cmatch", .has_arg = true, .val = 'm'},
 	{.name = "ctable", .has_arg = true, .val = 't'},
+	{.name = "rtable", .has_arg = true, .val = 'r'},
 	{},
 };
 
@@ -33,6 +34,7 @@ static void tabclas_tg_help(void)
 "TABCLAS target options:\n"
 "    --cmatch [dst/src]    Match destination or source address\n"
 "    --ctable [3,4,5,6]    Table to set priority from\n"
+"    --from-rtable [table num 0-255]    Route table to set priority from route realm\n"
 );
 }
 

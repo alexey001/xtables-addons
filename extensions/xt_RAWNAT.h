@@ -11,6 +11,7 @@ struct xt_rawnat_tginfo {
 enum {
         XT_TABCLAS_MATCH = 1 << 0,
         XT_TABCLAS_TABLE = 1 << 1,
+        XT_TABCLAS_RTABLE = 1 << 2,
 };
 
 
