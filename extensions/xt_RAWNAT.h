@@ -6,7 +6,7 @@ struct xt_rawnat_tginfo {
   __u8 mask;
   unsigned int match;
   unsigned int table;
-  __be32 rtable;
+  unsigned int rtable;
 };
 
 enum {

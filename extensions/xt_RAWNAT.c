@@ -68,6 +68,27 @@ static struct net *pick_net(struct sk_buff *skb)
 	return &init_net;
 }
 
+struct fib_table *fib_get_table(struct net *net, u32 id)
+{
+	struct fib_table *tb;
+	struct hlist_head *head;
+	unsigned int h;
+
+	if (id == 0)
+		id = RT_TABLE_MAIN;
+	h = id & (FIB_TABLE_HASHSZ - 1);
+
+	rcu_read_lock();
+	head = &net->ipv4.fib_table_hash[h];
+	hlist_for_each_entry_rcu(tb, head, tb_hlist) {
+		if (tb->tb_id == id) {
+			rcu_read_unlock();
+			return tb;
+		}
+	}
+	rcu_read_unlock();
+	return NULL;
+}
 
 #ifdef WITH_IPV6
 static void
@@ -265,9 +286,8 @@ tabclas_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 	struct iphdr *iph;
         struct fib_table *ft;
         struct net *net;
-        struct fib_result *fib_res = { 0 };
-        struct flowi4 fl4;
-        u32 table;
+        struct fib_result fib_res = { 0 };
+        struct flowi4 fl4 = { 0 };
         int error;
 
 	const struct xt_rawnat_tginfo *info = par->targinfo;
@@ -275,22 +295,26 @@ tabclas_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 
 	iph = ip_hdr(skb);
 
-        if (info->rtable)
+        if (info->rtable > 1)
           {
             net=pick_net(skb);
-            ft=fib_get_table(net,table);
-            if (!table)
+            ft=fib_get_table(net,info->rtable);
+            if (!ft)
               return XT_CONTINUE;
-            if (info->match == 0) fl4.daddr=iph->daddr;
+            if (info->match == 0) fl4.daddr=ntohl(iph->daddr);
             else
-              fl4.daddr=iph->saddr;
+              fl4.daddr=ntohl(iph->saddr);
 
-            error=fib_table_lookup(ft,&fl4,fib_res,FIB_LOOKUP_NOREF);
+
+            //error=fib_table_lookup(ft,&fl4,&fib_res,FIB_LOOKUP_NOREF);
+            error=fib_table_lookup(ft,&fl4,&fib_res,0);
+            printk("Recv 1 err: %i ip: %X RT: %i FT: %p \n",error,fl4.daddr,info->rtable,ft);
             if (!error)
               {
-                struct fib_nh *nh=&FIB_RES_NH(*fib_res);
+                struct fib_nh *nh=&FIB_RES_NH(fib_res); 
                 priority=nh->nh_tclassid;
               }
+              else priority=0;
           }
         else
           {
@@ -304,6 +328,7 @@ tabclas_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 		return XT_CONTINUE;
 
 	skb->priority = priority;
+	skb_nfmark(skb) = priority;
 	return XT_CONTINUE;
 }
 

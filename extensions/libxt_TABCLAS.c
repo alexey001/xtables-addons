@@ -34,7 +34,7 @@ static void tabclas_tg_help(void)
 "TABCLAS target options:\n"
 "    --cmatch [dst/src]    Match destination or source address\n"
 "    --ctable [3,4,5,6]    Table to set priority from\n"
-"    --from-rtable [table num 2-254]    Route table to set priority from route realm\n"
+"    --rtable [table num 2-254]    Route table to set priority from route realm\n"
 );
 }
 
@@ -64,7 +64,7 @@ tabclas_tg4_parse(int c, char **argv, int invert, unsigned int *flags,
 		return true;
 		break;
 	case 'r':
-		if (!xtables_strtoui(optarg, NULL, &info->table, 2, 254))
+		if (!xtables_strtoui(optarg, NULL, &info->rtable, 2, 254))
 			xtables_param_act(XTF_BAD_VALUE, "TABCLAS",
 				"--rtable", optarg);
 		*flags |= XT_TABCLAS_RTABLE;
