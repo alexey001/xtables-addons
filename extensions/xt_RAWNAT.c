@@ -301,13 +301,18 @@ tabclas_tg4(struct sk_buff *skb, const struct xt_action_param *par)
             ft=fib_get_table(net,info->rtable);
             if (!ft)
               return XT_CONTINUE;
-            if (info->match == 0) fl4.daddr=ntohl(iph->daddr);
+            if (info->match == 0) fl4.daddr=iph->daddr;
             else
-              fl4.daddr=ntohl(iph->saddr);
+                fl4.daddr=iph->saddr;
+
+                fl4.flowi4_oif = 0;
+		fl4.flowi4_mark = skb->mark;
+		fl4.flowi4_tos = RT_TOS(iph->tos);
+		fl4.flowi4_scope = RT_SCOPE_UNIVERSE;
 
 
-            //error=fib_table_lookup(ft,&fl4,&fib_res,FIB_LOOKUP_NOREF);
-            error=fib_table_lookup(ft,&fl4,&fib_res,0);
+            error=fib_table_lookup(ft,&fl4,&fib_res,FIB_LOOKUP_NOREF);
+            //error=fib_table_lookup(ft,&fl4,&fib_res,0);
             printk("Recv 1 err: %i ip: %X RT: %i FT: %p \n",error,fl4.daddr,info->rtable,ft);
             if (!error)
               {
@@ -328,7 +333,6 @@ tabclas_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 		return XT_CONTINUE;
 
 	skb->priority = priority;
-	skb_nfmark(skb) = priority;
 	return XT_CONTINUE;
 }
 
