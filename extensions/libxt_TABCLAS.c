@@ -34,7 +34,7 @@ static void tabclas_tg_help(void)
 "TABCLAS target options:\n"
 "    --cmatch [dst/src]    Match destination or source address\n"
 "    --ctable [3,4,5,6]    Table to set priority from\n"
-"    --from-rtable [table num 0-255]    Route table to set priority from route realm\n"
+"    --from-rtable [table num 2-254]    Route table to set priority from route realm\n"
 );
 }
 
@@ -44,7 +44,7 @@ tabclas_tg4_parse(int c, char **argv, int invert, unsigned int *flags,
 {
 
 	struct xt_rawnat_tginfo *info = (void *)(*target)->data;
-	
+
 	switch (c) {
 	case 'm':
 		if (strcmp(optarg, "dst") == 0)
@@ -63,6 +63,13 @@ tabclas_tg4_parse(int c, char **argv, int invert, unsigned int *flags,
 		*flags |= XT_TABCLAS_TABLE;
 		return true;
 		break;
+	case 'r':
+		if (!xtables_strtoui(optarg, NULL, &info->table, 2, 254))
+			xtables_param_act(XTF_BAD_VALUE, "TABCLAS",
+				"--rtable", optarg);
+		*flags |= XT_TABCLAS_RTABLE;
+		return true;
+		break;
 
 	}
 	return false;
@@ -70,7 +77,7 @@ tabclas_tg4_parse(int c, char **argv, int invert, unsigned int *flags,
 
 static void tabclas_tg_check(unsigned int flags)
 {
-	if ((!(flags & XT_TABCLAS_MATCH)) || (!(flags & XT_TABCLAS_TABLE)))
+  if ((!(flags & XT_TABCLAS_MATCH)) || (!(flags & (XT_TABCLAS_TABLE | XT_TABCLAS_RTABLE))))
 		xtables_error(PARAMETER_PROBLEM, "TABCLAS: "
 			"--cmatch and --ctable are required.");
 }
@@ -81,8 +88,8 @@ tabclas_tg4_print(const void *entry, const struct xt_entry_target *target,
 {
 	const struct xt_rawnat_tginfo *info = (const void *)target->data;
 
-	printf(" cmatch %s ctable %d ", info->match ? "src" : "dst", info->table);
-	
+	printf(" cmatch %s ctable %d rtable %d", info->match ? "src" : "dst", info->table, info->rtable);
+
 }
 
 

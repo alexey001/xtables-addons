@@ -21,6 +21,8 @@
 #include <linux/netfilter_arp.h>
 #include <net/ip.h>
 #include <net/ipv6.h>
+#include <net/route.h>
+#include <net/ip_fib.h>
 #include "compat_xtables.h"
 #include "xt_RAWNAT.h"
 
@@ -51,6 +53,21 @@ remask(__be32 addr, __be32 repl, unsigned int shift)
 	uint32_t mask = (shift == 32) ? 0 : (~(uint32_t)0 >> shift);
 	return htonl((ntohl(addr) & mask) | (ntohl(repl) & ~mask));
 }
+
+static struct net *pick_net(struct sk_buff *skb)
+{
+#ifdef CONFIG_NET_NS
+	const struct dst_entry *dst;
+
+	if (skb->dev != NULL)
+		return dev_net(skb->dev);
+	dst = skb_dst(skb);
+	if (dst != NULL && dst->dev != NULL)
+		return dev_net(dst->dev);
+#endif
+	return &init_net;
+}
+
 
 #ifdef WITH_IPV6
 static void
@@ -181,7 +198,7 @@ rawdnat_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 		return NF_DROP;
 
 	iph = ip_hdr(skb);
-	
+
 	csum_replace4(&iph->check, iph->daddr, new_addr);
 	rawnat4_update_l4(skb, iph->daddr, new_addr);
 	//printk("test ip: %ld\n", iph->daddr);
@@ -196,12 +213,12 @@ tabsnat_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 	__be32 new_addr;
 
 	iph = ip_hdr(skb);
-	
+
 	new_addr = tabsnat[iph->saddr >> 16];
 
 	if (new_addr == 0)
 		return XT_CONTINUE;
-	
+
 	if (iph->saddr == new_addr)
 		return XT_CONTINUE;
 
@@ -226,7 +243,7 @@ tabdnat_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 
 	if (new_addr == 0)
 		return XT_CONTINUE;
-	
+
 	if (iph->daddr == new_addr)
 		return XT_CONTINUE;
 
@@ -234,7 +251,7 @@ tabdnat_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 		return NF_DROP;
 
 	iph = ip_hdr(skb);
-	
+
 	csum_replace4(&iph->check, iph->daddr, new_addr);
 	rawnat4_update_l4(skb, iph->daddr, new_addr);
 	//printk("test ip: %ld\n", iph->daddr);
@@ -246,16 +263,43 @@ static unsigned int
 tabclas_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	struct iphdr *iph;
+        struct fib_table *ft;
+        struct net *net;
+        struct fib_result *fib_res = { 0 };
+        struct flowi4 fl4;
+        u32 table;
+        int error;
+
 	const struct xt_rawnat_tginfo *info = par->targinfo;
 	__be32 priority;
 
 	iph = ip_hdr(skb);
-	
+
+        if (info->rtable)
+          {
+            net=pick_net(skb);
+            ft=fib_get_table(net,table);
+            if (!table)
+              return XT_CONTINUE;
+            if (info->match == 0) fl4.daddr=iph->daddr;
+            else
+              fl4.daddr=iph->saddr;
+
+            error=fib_table_lookup(ft,&fl4,fib_res,FIB_LOOKUP_NOREF);
+            if (!error)
+              {
+                struct fib_nh *nh=&FIB_RES_NH(*fib_res);
+                priority=nh->nh_tclassid;
+              }
+          }
+        else
+          {
 	if (info->match == 0)
 		priority = tabclas[info->table - 3][iph->daddr >> 16];
-	else 
+	else
 		priority = tabclas[info->table - 3][iph->saddr >> 16];
-	
+          }
+
 	if (priority == 0)
 		return XT_CONTINUE;
 
@@ -273,11 +317,12 @@ static bool rawnat6_prepare_l4(struct sk_buff *skb, unsigned int *l4offset,
 		{IPPROTO_TCP, IPPROTO_UDP, IPPROTO_UDPLITE};
 	unsigned int i;
 	int err;
+        unsigned short frag;
 
 	*l4proto = NEXTHDR_MAX;
 
 	for (i = 0; i < ARRAY_SIZE(types); ++i) {
-		err = ipv6_find_hdr(*pskb, l4offset, types[i], NULL);
+          err = ipv6_find_hdr(skb, l4offset, types[i], &frag, NULL);
 		if (err >= 0) {
 			*l4proto = types[i];
 			break;
@@ -350,7 +395,7 @@ rawsnat_tg6(struct sk_buff *skb, const struct xt_action_param *par)
 	rawnat_ipv6_mask(new_addr.s6_addr32, info->addr.ip6, info->mask);
 	if (ipv6_addr_cmp(&iph->saddr, &new_addr) == 0)
 		return XT_CONTINUE;
-	if (!rawnat6_prepare_l4(pskb, &l4offset, &l4proto))
+	if (!rawnat6_prepare_l4(skb, &l4offset, &l4proto))
 		return NF_DROP;
 	iph = ipv6_hdr(skb);
 	rawnat6_update_l4(skb, l4proto, l4offset, &iph->saddr, &new_addr);
@@ -371,7 +416,7 @@ rawdnat_tg6(struct sk_buff *skb, const struct xt_action_param *par)
 	rawnat_ipv6_mask(new_addr.s6_addr32, info->addr.ip6, info->mask);
 	if (ipv6_addr_cmp(&iph->daddr, &new_addr) == 0)
 		return XT_CONTINUE;
-	if (!rawnat6_prepare_l4(pskb, &l4offset, &l4proto))
+	if (!rawnat6_prepare_l4(skb, &l4offset, &l4proto))
 		return NF_DROP;
 	iph = ipv6_hdr(skb);
 	rawnat6_update_l4(skb, l4proto, l4offset, &iph->daddr, &new_addr);
@@ -406,10 +451,10 @@ static int ipt_rnat_set_ctl(struct sock *sk, int cmd,
 	struct ipt_rnat_handle_sockopt handle;
 	int ret = -EINVAL;
 	__be32 *table;
-	
+
 	if (!capable(CAP_NET_ADMIN))
 		return -EPERM;
-	
+
 	switch (cmd) {
 	case IPT_SO_SET_RAWNAT_IP:
 		if (len != sizeof(struct ipt_rnat_handle_sockopt)) {
@@ -426,17 +471,17 @@ static int ipt_rnat_set_ctl(struct sock *sk, int cmd,
 		}
 
 		table = tabdnat;
-		if (handle.tab_num == 2) 
+		if (handle.tab_num == 2)
 			table = tabsnat;
 		else if ((handle.tab_num >= 3) && (handle.tab_num <= 6)) 
 			table = tabclas[handle.tab_num-3];
 		down(&ipt_rnat_userspace_mutex);
 		table[(handle.ip >> 16)] = handle.repl_ip;
 		up(&ipt_rnat_userspace_mutex);
-		printk("added %ld -> %ld to table %i\n", handle.ip, handle.repl_ip, handle.tab_num);
+		printk("added %i -> %i to table %i\n", handle.ip, handle.repl_ip, handle.tab_num);
 		ret = 0;
 		break;
-		
+
 	case IPT_SO_SET_RAWNAT_FREE_IP: {
 		if (len != sizeof(struct ipt_rnat_handle_sockopt)) {
 			printk("RAWNAT: ipt_rnat_set_ctl: wrong data size (%u != %zu) "
@@ -452,11 +497,11 @@ static int ipt_rnat_set_ctl(struct sock *sk, int cmd,
 		}
 
 		table = tabdnat;
-		if (handle.tab_num == 2) 
+		if (handle.tab_num == 2)
 			table = tabsnat;
-		else if ((handle.tab_num >= 3) && (handle.tab_num <= 6)) 
+		else if ((handle.tab_num >= 3) && (handle.tab_num <= 6))
 			table = tabclas[handle.tab_num-3];
-		
+
 		down(&ipt_rnat_userspace_mutex);
 		memset(table, 0, sizeof(__be32)*0xFFFF);
 		up(&ipt_rnat_userspace_mutex);
@@ -480,7 +525,7 @@ static int ipt_rnat_get_ctl(struct sock *sk, int cmd, void *user, int *len)
 
 	if (!capable(CAP_NET_ADMIN))
 		return -EPERM;
-	
+
 	switch (cmd) {
 	case IPT_SO_GET_RAWNAT_GET_DATA:
 		if (*len <= sizeof(struct ipt_rnat_handle_sockopt)) {
@@ -495,15 +540,15 @@ static int ipt_rnat_get_ctl(struct sock *sk, int cmd, void *user, int *len)
 				"IPT_SO_SET_RAWNAT_IP\n");
 			break;
 		}
-		
+
 		table = tabdnat;
-		if (handle.tab_num == 2) 
+		if (handle.tab_num == 2)
 			table = tabsnat;
-		else if ((handle.tab_num >= 3) && (handle.tab_num <= 6)) 
+		else if ((handle.tab_num >= 3) && (handle.tab_num <= 6))
 			table = tabclas[handle.tab_num-3];
 
 		if (*len >= sizeof(__be32)*0xFFFF) {
-		
+
 			if (copy_to_user(user, table, sizeof(__be32)*0xFFFF)) {
 				return -EFAULT;
 				break;
@@ -515,7 +560,7 @@ static int ipt_rnat_get_ctl(struct sock *sk, int cmd, void *user, int *len)
 	default:
 		printk("ACCOUNT: ipt_acc_get_ctl: unknown request %i\n", cmd);
 	}
-	
+
 	return ret;
 }
 
@@ -615,7 +660,7 @@ static struct nf_sockopt_ops ipt_rnat_sockopts = {
 static int __init rawnat_tg_init(void)
 {
 	sema_init(&ipt_rnat_userspace_mutex, 1);
-	
+
 	tabdnat = kmalloc(sizeof(__be32)*0xFFFF, GFP_KERNEL);
 	memset(tabdnat, 0, sizeof(__be32)*0xFFFF);
 	tabsnat = kmalloc(sizeof(__be32)*0xFFFF, GFP_KERNEL);
@@ -629,7 +674,7 @@ static int __init rawnat_tg_init(void)
 	memset(tabclas[2], 0, sizeof(__be32)*0xFFFF);
 	tabclas[3] = kmalloc(sizeof(__be32)*0xFFFF, GFP_KERNEL);
 	memset(tabclas[3], 0, sizeof(__be32)*0xFFFF);
-	
+
 	printk(KERN_ALERT "TABNAT/TABCLASS loaded\n");
 
 	/* Register setsockopt */
@@ -637,7 +682,7 @@ static int __init rawnat_tg_init(void)
 		printk("ACCOUNT: Can't register sockopts. Aborting\n");
 		goto error_cleanup;
 	}
-	
+
 	return xt_register_targets(rawnat_tg_reg, ARRAY_SIZE(rawnat_tg_reg));
 
 error_cleanup:
@@ -650,9 +695,9 @@ error_cleanup:
 
 static void __exit rawnat_tg_exit(void)
 {
-	
+
 	xt_unregister_targets(rawnat_tg_reg, ARRAY_SIZE(rawnat_tg_reg));
-	
+
 	nf_unregister_sockopt(&ipt_rnat_sockopts);
 
 	if (tabdnat)
@@ -668,5 +713,6 @@ MODULE_DESCRIPTION("Xtables: conntrack-less raw NAT, table raw NAT, table CLASSI
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_RAWSNAT");
 MODULE_ALIAS("ipt_RAWDNAT");
+MODULE_ALIAS("ipt_TABCLAS");
 MODULE_ALIAS("ip6t_RAWSNAT");
 MODULE_ALIAS("ip6t_RAWDNAT");

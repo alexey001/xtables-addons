@@ -2,10 +2,11 @@
 #define _LINUX_NETFILTER_XT_TARGET_RAWNAT 1
 
 struct xt_rawnat_tginfo {
-	union nf_inet_addr addr;
-	__u8 mask;
-	unsigned int match;
-	unsigned int table;
+  union nf_inet_addr addr;
+  __u8 mask;
+  unsigned int match;
+  unsigned int table;
+  __be32 rtable;
 };
 
 enum {
