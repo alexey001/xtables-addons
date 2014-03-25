@@ -313,7 +313,7 @@ tabclas_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 
             error=fib_table_lookup(ft,&fl4,&fib_res,FIB_LOOKUP_NOREF);
             //error=fib_table_lookup(ft,&fl4,&fib_res,0);
-            printk("Recv 1 err: %i ip: %X RT: %i FT: %p \n",error,fl4.daddr,info->rtable,ft);
+            //printk("Recv 1 err: %i ip: %X RT: %i FT: %p \n",error,fl4.daddr,info->rtable,ft);
             if (!error)
               {
                 struct fib_nh *nh=&FIB_RES_NH(fib_res); 
